@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>UC2 — Prozessflow Haller Andernach</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #07101E;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding: 40px 32px 60px;
+  color: #E2EAF8;
+}
+.page { max-width: 860px; margin: 0 auto; }
+
+/* HEADER */
+.hdr {
+  text-align: center;
+  margin-bottom: 44px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.hdr-tag { font-size: 10px; font-weight: 700; letter-spacing: 3px; color: #3B82F6; text-transform: uppercase; margin-bottom: 8px; }
+.hdr-title { font-size: 28px; font-weight: 900; color: #fff; letter-spacing: -0.5px; margin-bottom: 6px; }
+.hdr-sub { font-size: 12px; color: #3A5070; }
+.hdr-pills { display: flex; justify-content: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+.pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 10px; font-weight: 600;
+  border: 1px solid;
+}
+
+/* SECTION HEADER */
+.sys-hdr {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 20px; margin-top: 8px;
+}
+.sys-hdr-line { flex: 1; height: 1px; }
+.sys-hdr-label {
+  font-size: 10px; font-weight: 800; letter-spacing: 2px;
+  text-transform: uppercase; white-space: nowrap;
+  padding: 4px 14px; border-radius: 20px;
+}
+
+/* STEP CARD */
+.step {
+  display: flex;
+  gap: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 0;
+}
+
+.step-icon-col {
+  width: 88px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 20px 10px;
+}
+.step-icon-wrap {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.step-icon-wrap svg { width: 28px; height: 28px; }
+.tech-name {
+  font-size: 8px; font-weight: 700; letter-spacing: 0.5px;
+  text-align: center; line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.step-content {
+  flex: 1;
+  padding: 18px 20px;
+  border-left: 1px solid;
+}
+.step-num-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.step-num {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; flex-shrink: 0;
+}
+.step-title { font-size: 14px; font-weight: 700; color: #fff; }
+.step-items { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; }
+.si {
+  display: flex; align-items: flex-start; gap: 6px;
+  font-size: 11px; color: #7A9ABE; line-height: 1.45;
+}
+.si::before { content: '›'; font-weight: 700; margin-top: 1px; flex-shrink: 0; }
+.badge-inline {
+  display: inline-block;
+  padding: 1px 7px; border-radius: 4px;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: 0.3px;
+  vertical-align: middle;
+}
+
+/* ARROW */
+.arr-wrap {
+  display: flex; align-items: center;
+  padding: 0 0 0 44px; margin: 2px 0;
+}
+.arr-inner { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.arr-shaft { width: 2px; height: 24px; border-radius: 1px; }
+.arr-head { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; }
+.arr-label { font-size: 9px; font-weight: 600; color: #2A3E58; margin-left: 8px; letter-spacing: 0.3px; }
+
+/* DOTTED ARROW */
+.arr-dotted .arr-shaft {
+  background: repeating-linear-gradient(180deg, #2A4060 0px, #2A4060 4px, transparent 4px, transparent 8px) !important;
+}
+
+/* BRANCH */
+.branch-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  position: relative;
+  margin: 2px 0;
+}
+.branch-connector {
+  position: absolute;
+  top: -2px; left: calc(25% - 1px);
+  width: calc(50%);
+  height: 2px;
+}
+
+/* DECISION BOX */
+.decision {
+  margin: 2px 0;
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+}
+.diamond-wrap {
+  width: 100%;
+  display: flex; justify-content: center;
+  position: relative;
+  padding: 8px 0;
+}
+.diamond {
+  width: 56px; height: 56px;
+  transform: rotate(45deg);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid;
+}
+.diamond-label {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 9px; font-weight: 800;
+  text-align: center;
+  pointer-events: none;
+  z-index: 2;
+  white-space: nowrap;
+  color: #FBBF24;
+}
+
+/* SPECIAL BOXES */
+.dsgvo-note {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(251,191,36,0.05);
+  border: 1px solid rgba(251,191,36,0.18);
+  font-size: 10px; color: #A08010; line-height: 1.5;
+}
+.agg-note {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(239,68,68,0.06);
+  border: 1px solid rgba(239,68,68,0.18);
+  font-size: 10px; color: #A05050;
+}
+
+/* DELETE CARD */
+.delete-card {
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex; align-items: center; gap: 16px;
+  border: 1px dashed;
+  margin-top: 2px;
+}
+.delete-num { font-size: 28px; font-weight: 900; }
+.delete-unit { font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+
+/* FOOTER LEGEND */
+.legend {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+.leg-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 10px; color: #3A5070; font-weight: 500;
+}
+.leg-icon { width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.leg-icon svg { width: 14px; height: 14px; }
+
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-tag">RAIS — Discovery Call · Immobilienverwaltung Haller · Andernach</div>
+  <div class="hdr-title">UC2 — Lead-Qualifizierung &amp; Terminmanagement</div>
+  <div class="hdr-sub">Vollständiger Prozessflow · Version 1.0</div>
+  <div class="hdr-pills">
+    <div class="pill" style="border-color:#1E3A6E;color:#3B82F6;background:rgba(59,130,246,0.06);">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      System 1: Lead-Qualifizierung
+    </div>
+    <div class="pill" style="border-color:#0F3818;color:#22C55E;background:rgba(34,197,94,0.06);">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      System 2: Terminmanagement
+    </div>
+    <div class="pill" style="border-color:#3D1010;color:#F87171;background:rgba(239,68,68,0.06);">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      DSGVO-konform · Supabase EU
+    </div>
+    <div class="pill" style="border-color:#1E2A3E;color:#64748B;background:rgba(100,116,139,0.06);">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      n8n · Mistral AI · Supabase · Vercel
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SYSTEM 1 ═══ -->
+<div class="sys-hdr">
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,transparent,#1E3A6E);"></div>
+  <div class="sys-hdr-label" style="background:rgba(30,58,110,0.3);border:1px solid #1E3A6E;color:#3B82F6;">System 1 — Lead-Qualifizierung</div>
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,#1E3A6E,transparent);"></div>
+</div>
+
+<!-- STEP 1 -->
+<div class="step" style="background:linear-gradient(135deg,#0C1E3C,#091628);border:1px solid #1A3A6A;">
+  <div class="step-icon-col" style="background:rgba(30,58,110,0.3);">
+    <div class="step-icon-wrap" style="background:#00AF41;">
+      <!-- ImmoScout house icon -->
+      <svg viewBox="0 0 28 28" fill="none">
+        <path d="M14 3L3 12h3v10h6v-6h4v6h6V12h3L14 3z" fill="white"/>
+        <text x="7" y="26" font-size="5.5" font-weight="800" fill="white" font-family="Inter,sans-serif">IS24</text>
+      </svg>
+    </div>
+    <div class="tech-name" style="color:#00AF41;">ImmoScout<br>24 API</div>
+  </div>
+  <div class="step-content" style="border-color:#1A3A6A;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#1A3A6A;color:#60A5FA;">1</div>
+      <div class="step-title">Nutzeranfrage eingehend</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Interessent sendet DM über ImmoScout24-Inserat</div>
+      <div class="si">n8n empfängt Anfrage via <span class="badge-inline" style="background:#0D2A50;color:#60A5FA;">REST API Webhook</span></div>
+      <div class="si">Trigger: neue Kontaktanfrage auf Objekt</div>
+    </div>
+  </div>
+</div>
+
+<div class="arr-wrap">
+  <div class="arr-inner">
+    <div class="arr-shaft" style="background:#1A3A6A;"></div>
+    <div class="arr-head" style="border-top:8px solid #1A3A6A;"></div>
+  </div>
+  <span class="arr-label">ImmoScout24 REST API</span>
+</div>
+
+<!-- STEP 2 -->
+<div class="step" style="background:linear-gradient(135deg,#0C1E3C,#091628);border:1px solid #1A3A6A;">
+  <div class="step-icon-col" style="background:rgba(30,58,110,0.3);">
+    <!-- n8n icon -->
+    <div class="step-icon-wrap" style="background:#EA4B26;">
+      <svg viewBox="0 0 28 28" fill="none">
+        <circle cx="7" cy="14" r="4" fill="white"/>
+        <circle cx="21" cy="7" r="3.5" fill="white" opacity="0.9"/>
+        <circle cx="21" cy="21" r="3.5" fill="white" opacity="0.9"/>
+        <line x1="11" y1="12" x2="18" y2="8.5" stroke="white" stroke-width="1.5"/>
+        <line x1="11" y1="16" x2="18" y2="19.5" stroke="white" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="tech-name" style="color:#EA4B26;">n8n</div>
+  </div>
+  <div class="step-content" style="border-color:#1A3A6A;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#1A3A6A;color:#60A5FA;">2</div>
+      <div class="step-title">Daten extrahieren &amp; in Supabase speichern</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Name, Inserat-ID, Datum/Uhrzeit aus API-Response extrahieren</div>
+      <div class="si">UUID generieren — einzigartiger Token pro Lead</div>
+      <div class="si">Lead-Datensatz in <span class="badge-inline" style="background:#1A3060;color:#818CF8;">Supabase Frankfurt</span> anlegen (Row Level Security)</div>
+      <div class="si">Unique Landing Page URL mit Token erstellen: <span class="badge-inline" style="background:#0D2A50;color:#60A5FA;">qualify.haller.de/?t=f3a9b2</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="arr-wrap">
+  <div class="arr-inner">
+    <div class="arr-shaft" style="background:#2D1F5E;"></div>
+    <div class="arr-head" style="border-top:8px solid #2D1F5E;"></div>
+  </div>
+  <span class="arr-label">Unique Token Link generiert</span>
+</div>
+
+<!-- STEP 3 -->
+<div class="step" style="background:linear-gradient(135deg,#120E2C,#0C0920);border:1px solid #2D1F5E;">
+  <div class="step-icon-col" style="background:rgba(45,31,94,0.3);">
+    <!-- Vercel triangle -->
+    <div class="step-icon-wrap" style="background:#000000;border:1px solid #333;">
+      <svg viewBox="0 0 28 28" fill="white">
+        <polygon points="14,4 26,24 2,24"/>
+      </svg>
+    </div>
+    <div class="tech-name" style="color:#A78BFA;">Vercel<br>Landing Page</div>
+  </div>
+  <div class="step-content" style="border-color:#2D1F5E;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#2D1F5E;color:#A78BFA;">3</div>
+      <div class="step-title">Unique Landing Page — Dokument-Upload</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Name vorausgefüllt (read-only aus Token) — Lead gibt Email + Telefon ein</div>
+      <div class="si">Drag &amp; Drop Upload: <span class="badge-inline" style="background:#2D1F5E;color:#A78BFA;">Schufa-Auskunft</span> <span class="badge-inline" style="background:#2D1F5E;color:#A78BFA;">Entgeltnachweis</span> <span class="badge-inline" style="background:#1E1200;color:#FBBF24;">Bürgschaft (optional)</span></div>
+      <div class="si">Dokumente in Supabase Storage EU gespeichert, verschlüsselt</div>
+    </div>
+    <div class="dsgvo-note">
+      <strong style="color:#FBBF24;">DSGVO Pflicht-Checkbox:</strong> "Ich stimme zu, dass meine Unterlagen ausschliesslich intern zur Bearbeitung meiner Mietanfrage verarbeitet und nach 90 Tagen automatisch gelöscht werden. Keine Weitergabe an Dritte." — Ohne Akzeptanz kein Upload möglich.
+    </div>
+  </div>
+</div>
+
+<div class="arr-wrap">
+  <div class="arr-inner">
+    <div class="arr-shaft" style="background:#0F3030;"></div>
+    <div class="arr-head" style="border-top:8px solid #0F3030;"></div>
+  </div>
+  <span class="arr-label">Dokumente hochgeladen</span>
+</div>
+
+<!-- STEP 4 -->
+<div class="step" style="background:linear-gradient(135deg,#091C1C,#061414);border:1px solid #0F3030;">
+  <div class="step-icon-col" style="background:rgba(15,48,48,0.4);">
+    <!-- Mistral AI icon - orange/red flame style -->
+    <div class="step-icon-wrap" style="background:linear-gradient(135deg,#FF7000,#CC4400);">
+      <svg viewBox="0 0 28 28" fill="none">
+        <rect x="4" y="4" width="6" height="6" rx="1" fill="white"/>
+        <rect x="11" y="4" width="6" height="6" rx="1" fill="white" opacity="0.8"/>
+        <rect x="18" y="4" width="6" height="6" rx="1" fill="white" opacity="0.6"/>
+        <rect x="4" y="11" width="6" height="6" rx="1" fill="white" opacity="0.8"/>
+        <rect x="11" y="11" width="6" height="6" rx="1" fill="white"/>
+        <rect x="18" y="11" width="6" height="6" rx="1" fill="white" opacity="0.8"/>
+        <rect x="4" y="18" width="6" height="6" rx="1" fill="white" opacity="0.6"/>
+        <rect x="11" y="18" width="6" height="6" rx="1" fill="white" opacity="0.8"/>
+        <rect x="18" y="18" width="6" height="6" rx="1" fill="white"/>
+      </svg>
+    </div>
+    <div class="tech-name" style="color:#FF9040;">Mistral AI<br>Pay-as-you-go</div>
+  </div>
+  <div class="step-content" style="border-color:#0F3030;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#0F3030;color:#2DD4BF;">4</div>
+      <div class="step-title">Mistral AI — Dokument-Analyse</div>
+    </div>
+    <div class="step-items">
+      <div class="si">PDF-Text extrahiert via n8n Code Node (pdfjs-extract)</div>
+      <div class="si">Mistral prüft: Alle Pflichtdokumente vorhanden? Zeitraum plausibel?</div>
+      <div class="si">Ergebnis + Vollständigkeits-Score in Supabase gespeichert</div>
+    </div>
+    <div class="agg-note">
+      <strong style="color:#F87171;">AGG-Hinweis:</strong> Kein Qualitätsurteil über die Person — nur Vollständigkeitsprüfung der Dokumente. Der Mensch entscheidet.
+    </div>
+  </div>
+</div>
+
+<div class="arr-wrap">
+  <div class="arr-inner">
+    <div class="arr-shaft" style="background:#3D2800;"></div>
+    <div class="arr-head" style="border-top:8px solid #3D2800;"></div>
+  </div>
+  <span class="arr-label">Analyse in Supabase gespeichert</span>
+</div>
+
+<!-- STEP 5 -->
+<div class="step" style="background:linear-gradient(135deg,#1A1000,#120C00);border:1px solid #3D2800;">
+  <div class="step-icon-col" style="background:rgba(61,40,0,0.4);">
+    <!-- HITL / Person icon -->
+    <div class="step-icon-wrap" style="background:#D97706;">
+      <svg viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="9" r="5" fill="white"/>
+        <path d="M4 24c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        <rect x="11" y="20" width="6" height="3" rx="1" fill="white"/>
+        <polyline points="9,21 11,23 15,19" stroke="#D97706" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="tech-name" style="color:#FBBF24;">HITL<br>Interface</div>
+  </div>
+  <div class="step-content" style="border-color:#3D2800;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#3D2800;color:#FBBF24;">5</div>
+      <div class="step-title">6h Batch-Digest → Mitarbeiter Entscheidung</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Alle 6 Stunden: Liste aller neuen qualifizierten Leads</div>
+      <div class="si">UI zeigt: Name, Dokument-Links, Mistral-Einschätzung (Vollständigkeit)</div>
+      <div class="si">Mitarbeiter klickt <span class="badge-inline" style="background:#0A2010;color:#34D399;">GO</span> oder <span class="badge-inline" style="background:#200A0A;color:#F87171;">NO-GO</span> — eine Aktion pro Lead</div>
+    </div>
+  </div>
+</div>
+
+<!-- BRANCH ARROWS -->
+<div style="display:flex;justify-content:space-around;padding:0 80px;margin:4px 0;">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+    <div style="width:2px;height:20px;background:#3D1010;"></div>
+    <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid #3D1010;"></div>
+    <div style="font-size:9px;color:#6B2020;font-weight:700;margin-top:2px;">NO-GO</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+    <div style="width:2px;height:20px;background:#0F3818;"></div>
+    <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid #0F3818;"></div>
+    <div style="font-size:9px;color:#1A6030;font-weight:700;margin-top:2px;">GO</div>
+  </div>
+</div>
+
+<!-- BRANCH CARDS -->
+<div class="branch-row">
+  <!-- NO-GO -->
+  <div class="step" style="background:linear-gradient(135deg,#180808,#110606);border:1.5px dashed #3D1010;">
+    <div class="step-icon-col" style="background:rgba(61,16,16,0.3);">
+      <div class="step-icon-wrap" style="background:#00AF41;">
+        <svg viewBox="0 0 28 28" fill="none">
+          <path d="M14 3L3 12h3v10h6v-6h4v6h6V12h3L14 3z" fill="white"/>
+        </svg>
+      </div>
+      <div class="tech-name" style="color:#EF4444;">IS24 DM<br>Absage</div>
+    </div>
+    <div class="step-content" style="border-color:#3D1010;">
+      <div class="step-num-row">
+        <div class="step-num" style="background:#3D1010;color:#F87171;">5a</div>
+        <div class="step-title" style="color:#F87171;font-size:13px;">NO-GO — Absage</div>
+      </div>
+      <div class="step-items">
+        <div class="si">Absage-DM via ImmoScout24 API</div>
+        <div class="si">"Leider kein Termin möglich..."</div>
+        <div class="si">Info: Daten werden nach 90 Tagen gelöscht</div>
+        <div class="si">Status in Supabase: "abgelehnt"</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GO -->
+  <div class="step" style="background:linear-gradient(135deg,#081808,#060F06);border:1.5px dashed #0F3818;">
+    <div class="step-icon-col" style="background:rgba(15,56,24,0.3);">
+      <div class="step-icon-wrap" style="background:#00AF41;">
+        <svg viewBox="0 0 28 28" fill="none">
+          <path d="M14 3L3 12h3v10h6v-6h4v6h6V12h3L14 3z" fill="white"/>
+        </svg>
+      </div>
+      <div class="tech-name" style="color:#22C55E;">IS24 DM<br>GO</div>
+    </div>
+    <div class="step-content" style="border-color:#0F3818;">
+      <div class="step-num-row">
+        <div class="step-num" style="background:#0F3818;color:#34D399;">5b</div>
+        <div class="step-title" style="color:#34D399;font-size:13px;">GO — Lead qualifiziert</div>
+      </div>
+      <div class="step-items">
+        <div class="si">DM via ImmoScout24 API: Bestätigung</div>
+        <div class="si">"Herzlichen Dank für Ihre Unterlagen..."</div>
+        <div class="si">Status in Supabase: "qualifiziert"</div>
+        <div class="si">System 2 wird automatisch gestartet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SYSTEM 2 ═══ -->
+<div class="sys-hdr" style="margin-top:20px;">
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,transparent,#0F3818);"></div>
+  <div class="sys-hdr-label" style="background:rgba(15,56,24,0.3);border:1px solid #0F3818;color:#22C55E;">System 2 — Terminmanagement</div>
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,#0F3818,transparent);"></div>
+</div>
+
+<!-- STEP 6 -->
+<div class="step" style="background:linear-gradient(135deg,#081C10,#061208);border:1px solid #0F3818;">
+  <div class="step-icon-col" style="background:rgba(15,56,24,0.3);">
+    <!-- Supabase DB icon -->
+    <div class="step-icon-wrap" style="background:#1C1C1C;">
+      <svg viewBox="0 0 28 28" fill="none">
+        <ellipse cx="14" cy="7" rx="10" ry="3.5" fill="#3ECF8E"/>
+        <path d="M4 7v7c0 1.93 4.477 3.5 10 3.5S24 15.93 24 14V7" fill="none" stroke="#3ECF8E" stroke-width="1.5"/>
+        <path d="M4 14v7c0 1.93 4.477 3.5 10 3.5S24 22.93 24 21v-7" fill="none" stroke="#3ECF8E" stroke-width="1.5" opacity="0.7"/>
+        <ellipse cx="14" cy="7" rx="10" ry="3.5" fill="none" stroke="#3ECF8E" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="tech-name" style="color:#3ECF8E;">Supabase<br>Slot-DB</div>
+  </div>
+  <div class="step-content" style="border-color:#0F3818;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#0F3818;color:#34D399;">6</div>
+      <div class="step-title">Slot-DB auslesen — Inserat-ID als Schlüssel</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Supabase DB 2: Inserat-ID sucht verfügbare Besichtigungsslots</div>
+      <div class="si">Felder: Datum, Uhrzeit, max. Kapazität, aktuell belegt</div>
+      <div class="si">Freier Slot gefunden → temporäre Reservierung (Status: "pending")</div>
+    </div>
+  </div>
+</div>
+
+<div class="arr-wrap">
+  <div class="arr-inner">
+    <div class="arr-shaft" style="background:#0F3818;"></div>
+    <div class="arr-head" style="border-top:8px solid #0F3818;"></div>
+  </div>
+  <span class="arr-label">Freier Slot reserviert</span>
+</div>
+
+<!-- STEP 7 -->
+<div class="step" style="background:linear-gradient(135deg,#081C10,#061208);border:1px solid #0F3818;">
+  <div class="step-icon-col" style="background:rgba(15,56,24,0.3);">
+    <!-- ImmoScout DM icon -->
+    <div class="step-icon-wrap" style="background:#00AF41;">
+      <svg viewBox="0 0 28 28" fill="none">
+        <path d="M14 3L3 12h3v10h6v-6h4v6h6V12h3L14 3z" fill="white" opacity="0.3"/>
+        <rect x="4" y="12" width="20" height="13" rx="2" fill="white"/>
+        <path d="M4 15l10 5 10-5" stroke="#00AF41" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="tech-name" style="color:#00AF41;">IS24<br>DM API</div>
+  </div>
+  <div class="step-content" style="border-color:#0F3818;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#0F3818;color:#34D399;">7</div>
+      <div class="step-title">Terminvorschlag DM → Lead</div>
+    </div>
+    <div class="step-items">
+      <div class="si">DM via ImmoScout24 API: "Wir bieten Ihnen einen Termin am 17.6 um 15:00 Uhr an..."</div>
+      <div class="si">Slot für <span class="badge-inline" style="background:#0F3818;color:#34D399;">24h reserviert</span> — n8n Scheduled Check alle 30 Min</div>
+      <div class="si">Timeout nach 24h → Slot automatisch freigegeben, nächster Lead bekommt Angebot</div>
+    </div>
+  </div>
+</div>
+
+<div class="arr-wrap">
+  <div class="arr-inner">
+    <div class="arr-shaft" style="background:#0F3818;"></div>
+    <div class="arr-head" style="border-top:8px solid #0F3818;"></div>
+  </div>
+  <span class="arr-label">Lead antwortet</span>
+</div>
+
+<!-- STEP 8 -->
+<div class="step" style="background:linear-gradient(135deg,#081C10,#061208);border:1px solid #0F3818;">
+  <div class="step-icon-col" style="background:rgba(15,56,24,0.3);">
+    <div class="step-icon-wrap" style="background:#1C1C1C;">
+      <svg viewBox="0 0 28 28" fill="none">
+        <ellipse cx="14" cy="7" rx="10" ry="3.5" fill="#3ECF8E"/>
+        <path d="M4 7v7c0 1.93 4.477 3.5 10 3.5S24 15.93 24 14V7" fill="none" stroke="#3ECF8E" stroke-width="1.5"/>
+        <path d="M4 14v7c0 1.93 4.477 3.5 10 3.5S24 22.93 24 21v-7" fill="none" stroke="#3ECF8E" stroke-width="1.5" opacity="0.7"/>
+        <polyline points="9,14 13,18 20,10" stroke="#FBBF24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="tech-name" style="color:#3ECF8E;">Supabase<br>Confirmed</div>
+  </div>
+  <div class="step-content" style="border-color:#0F3818;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#0F3818;color:#34D399;">8</div>
+      <div class="step-title">Buchung bestätigt</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Lead bestätigt Termin per DM-Reply</div>
+      <div class="si">Supabase: Slot-Status → <span class="badge-inline" style="background:#0F3818;color:#34D399;">confirmed</span></div>
+      <div class="si">Supabase: Lead-Status → "termin_gebucht"</div>
+      <div class="si">Buchungsbestätigung DM + Objekt-Adresse an Lead</div>
+    </div>
+  </div>
+</div>
+
+<!-- DOTTED ARROW -->
+<div class="arr-wrap">
+  <div class="arr-inner arr-dotted">
+    <div class="arr-shaft"></div>
+    <div class="arr-head" style="border-top:8px solid #2A4060;"></div>
+  </div>
+  <span class="arr-label">24h vor Besichtigungstermin</span>
+</div>
+
+<!-- STEP 9 -->
+<div class="step" style="background:linear-gradient(135deg,#0E1520,#0A1018);border:1px solid #1E2A3E;">
+  <div class="step-icon-col" style="background:rgba(30,42,62,0.3);">
+    <!-- PDF icon -->
+    <div class="step-icon-wrap" style="background:#DC2626;">
+      <svg viewBox="0 0 28 28" fill="none">
+        <path d="M6 3h11l5 5v17a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" fill="white" opacity="0.15" stroke="white" stroke-width="1.5"/>
+        <path d="M17 3v5h5" fill="none" stroke="white" stroke-width="1.5"/>
+        <text x="7" y="21" font-size="7" font-weight="800" fill="white" font-family="Inter,sans-serif">PDF</text>
+      </svg>
+    </div>
+    <div class="tech-name" style="color:#94A3B8;">Report<br>PDF</div>
+  </div>
+  <div class="step-content" style="border-color:#1E2A3E;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#1E2A3E;color:#94A3B8;">9</div>
+      <div class="step-title">24h-Report an internen Mitarbeiter</div>
+    </div>
+    <div class="step-items">
+      <div class="si">n8n generiert PDF via Python ReportLab</div>
+      <div class="si">Inhalt: Name, Email, Telefon aller Teilnehmer des Besichtigungstermins</div>
+      <div class="si">Objekt-Adresse, Datum, Uhrzeit, Gesamtkapazität</div>
+      <div class="si">Email mit PDF-Anhang an zuständigen Mitarbeiter</div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTO DELETE -->
+<div style="display:flex;justify-content:center;padding:0 44px;margin:4px 0;">
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <div style="width:2px;height:24px;background:repeating-linear-gradient(180deg,#3D1020 0px,#3D1020 4px,transparent 4px,transparent 8px);"></div>
+    <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid #3D1020;"></div>
+  </div>
+  <span style="font-size:9px;color:#5A2030;font-weight:600;margin-left:8px;align-self:center;">90 Tage nach erster Speicherung — Scheduled n8n Job</span>
+</div>
+
+<!-- AUTO DELETE CARD -->
+<div class="delete-card" style="background:linear-gradient(135deg,#0E0508,#090306);border-color:#3D1020;">
+  <div style="width:52px;height:52px;border-radius:14px;background:#3D1020;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2">
+      <polyline points="3 6 5 6 21 6"/>
+      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" opacity="0.3"/>
+    </svg>
+  </div>
+  <div style="flex:1;">
+    <div style="font-size:12px;font-weight:700;color:#F87171;margin-bottom:4px;">Auto-Delete — 90-Tage-Löschung</div>
+    <div style="font-size:11px;color:#6A3040;line-height:1.5;">
+      n8n prüft täglich: created_at &lt; now() - 90 Tage → Dokumente aus Supabase Storage löschen → Lead-Datensatz anonymisieren → Lead per DM informiert: <em style="color:#8A4050;">"Ihre Unterlagen wurden gemäß unserer Datenschutzerklärung automatisch gelöscht."</em>
+    </div>
+  </div>
+  <div style="text-align:center;flex-shrink:0;padding-left:12px;">
+    <div class="delete-num" style="color:#F87171;">90</div>
+    <div class="delete-unit" style="color:#6A3040;">Tage Max</div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="leg-item">
+    <div class="leg-icon" style="background:#00AF41;">
+      <svg viewBox="0 0 14 14" fill="white"><path d="M7 1L1 6h2v6h3v-3h2v3h3V6h2L7 1z"/></svg>
+    </div>
+    ImmoScout24 REST API
+  </div>
+  <div class="leg-item">
+    <div class="leg-icon" style="background:#EA4B26;">
+      <svg viewBox="0 0 14 14" fill="none"><circle cx="3.5" cy="7" r="2" fill="white"/><circle cx="10.5" cy="3.5" r="1.8" fill="white" opacity="0.9"/><circle cx="10.5" cy="10.5" r="1.8" fill="white" opacity="0.9"/><line x1="5.5" y1="6" x2="9" y2="4.3" stroke="white" stroke-width="1"/><line x1="5.5" y1="8" x2="9" y2="9.7" stroke="white" stroke-width="1"/></svg>
+    </div>
+    n8n (self-hosted)
+  </div>
+  <div class="leg-item">
+    <div class="leg-icon" style="background:#1C1C1C;">
+      <svg viewBox="0 0 14 14" fill="none"><ellipse cx="7" cy="3.5" rx="5" ry="1.8" fill="#3ECF8E"/><path d="M2 3.5v3.5c0 1 2.2 1.8 5 1.8s5-.8 5-1.8V3.5" stroke="#3ECF8E" stroke-width="0.8"/><path d="M2 7v3.5c0 1 2.2 1.8 5 1.8s5-.8 5-1.8V7" stroke="#3ECF8E" stroke-width="0.8" opacity="0.6"/></svg>
+    </div>
+    Supabase Frankfurt (EU)
+  </div>
+  <div class="leg-item">
+    <div class="leg-icon" style="background:#000000;border:1px solid #333;">
+      <svg viewBox="0 0 14 14" fill="white"><polygon points="7,2 13,12 1,12"/></svg>
+    </div>
+    Vercel (Landing Page)
+  </div>
+  <div class="leg-item">
+    <div class="leg-icon" style="background:linear-gradient(135deg,#FF7000,#CC4400);">
+      <svg viewBox="0 0 14 14" fill="white"><rect x="1" y="1" width="4" height="4" rx="0.5"/><rect x="5.5" y="1" width="4" height="4" rx="0.5" opacity="0.8"/><rect x="1" y="5.5" width="4" height="4" rx="0.5" opacity="0.8"/><rect x="5.5" y="5.5" width="4" height="4" rx="0.5"/><rect x="10" y="1" width="3" height="3" rx="0.5" opacity="0.6"/></svg>
+    </div>
+    Mistral AI (Pay-as-you-go)
+  </div>
+  <div class="leg-item">
+    <div class="leg-icon" style="background:#DC2626;">
+      <svg viewBox="0 0 14 14" fill="white"><path d="M3 1.5h5l3 3v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-10a1 1 0 0 1 1-1z" fill="none" stroke="white" stroke-width="0.8"/><text x="2.5" y="11" font-size="4" font-weight="800" font-family="sans-serif">PDF</text></svg>
+    </div>
+    ReportLab PDF-Report
+  </div>
+</div>
+
+</div><!-- end page -->
+</body>
+</html>
