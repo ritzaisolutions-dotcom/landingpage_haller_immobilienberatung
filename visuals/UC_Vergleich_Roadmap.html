@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>UC Vergleich & Roadmap — RAIS × Haller</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #07101E;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  padding: 40px 40px 60px;
+  color: #E2EAF8;
+}
+.page { max-width: 1200px; margin: 0 auto; }
+
+/* HEADER */
+.hdr { text-align:center; margin-bottom:44px; padding-bottom:24px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.hdr-tag { font-size:10px; font-weight:700; letter-spacing:3px; color:#3B82F6; text-transform:uppercase; margin-bottom:8px; }
+.hdr-title { font-size:28px; font-weight:900; color:#fff; letter-spacing:-0.5px; margin-bottom:6px; }
+.hdr-sub { font-size:12px; color:#3A5070; }
+
+/* SECTION LABEL */
+.sec-lbl {
+  display:flex; align-items:center; gap:12px;
+  margin-bottom:20px;
+}
+.sec-lbl::before, .sec-lbl::after { content:''; flex:1; height:1px; background:rgba(255,255,255,0.06); }
+.sec-lbl span {
+  font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase;
+  color:#3A5070; white-space:nowrap; padding:0 4px;
+}
+
+/* UC COLUMNS */
+.uc-grid {
+  display:grid;
+  grid-template-columns:1fr 1.15fr 1fr;
+  gap:16px;
+  margin-bottom:36px;
+  align-items:start;
+}
+
+.uc-card {
+  border-radius:18px;
+  overflow:hidden;
+  position:relative;
+}
+
+/* UC1 - TEAL */
+.uc1 { border:1px solid #0E3A3A; background:linear-gradient(160deg,#071C1C,#050F0F); }
+.uc1 .uc-topbar { background:linear-gradient(90deg,#0A2828,#062020); border-bottom:1px solid #0E3A3A; }
+.uc1 .accent { color:#2DD4BF; }
+.uc1 .accent-bg { background:#0E3A3A; }
+.uc1 .accent-border { border-color:#0E3A3A; }
+.uc1 .flow-dot { background:#2DD4BF; }
+.uc1 .flow-line { background:#0E3A3A; }
+.uc1 .star-fill { color:#2DD4BF; }
+.uc1 .priority-badge { background:#0A2828; border:1px solid #0E3A3A; color:#2DD4BF; }
+
+/* UC2 - BLUE (highlighted) */
+.uc2 { border:1px solid #1E3A6E; background:linear-gradient(160deg,#081828,#050F1E); box-shadow:0 0 40px rgba(59,130,246,0.08); }
+.uc2 .uc-topbar { background:linear-gradient(90deg,#0D1F3C,#081628); border-bottom:1px solid #1E3A6E; }
+.uc2 .accent { color:#60A5FA; }
+.uc2 .accent-bg { background:#1E3A6E; }
+.uc2 .accent-border { border-color:#1E3A6E; }
+.uc2 .flow-dot { background:#60A5FA; }
+.uc2 .flow-line { background:#1E3A6E; }
+.uc2 .star-fill { color:#60A5FA; }
+.uc2 .priority-badge { background:#0D1F3C; border:1px solid #1E3A6E; color:#60A5FA; }
+.uc2-main-badge {
+  position:absolute; top:-1px; left:50%; transform:translateX(-50%);
+  background:linear-gradient(90deg,#1D4ED8,#2563EB);
+  color:white; font-size:9px; font-weight:800;
+  padding:3px 14px; border-radius:0 0 10px 10px;
+  letter-spacing:1.5px; text-transform:uppercase;
+  white-space:nowrap;
+}
+
+/* UC3 - AMBER */
+.uc3 { border:1px solid #3D2800; background:linear-gradient(160deg,#1A1000,#0E0800); }
+.uc3 .uc-topbar { background:linear-gradient(90deg,#1E1200,#120C00); border-bottom:1px solid #3D2800; }
+.uc3 .accent { color:#FBBF24; }
+.uc3 .accent-bg { background:#3D2800; }
+.uc3 .accent-border { border-color:#3D2800; }
+.uc3 .flow-dot { background:#FBBF24; }
+.uc3 .flow-line { background:#3D2800; }
+.uc3 .star-fill { color:#FBBF24; }
+.uc3 .priority-badge { background:#1E1200; border:1px solid #3D2800; color:#FBBF24; }
+
+.uc-topbar { padding:18px 20px 14px; }
+.uc-num { font-size:9px; font-weight:700; letter-spacing:2px; text-transform:uppercase; opacity:0.6; margin-bottom:4px; }
+.uc-name { font-size:16px; font-weight:800; color:#fff; line-height:1.2; margin-bottom:8px; }
+.uc-desc { font-size:11px; color:#5A7090; line-height:1.5; }
+
+.uc-body { padding:18px 20px 20px; }
+
+/* MINI FLOW */
+.mini-flow { display:flex; flex-direction:column; gap:0; margin-bottom:18px; }
+.mf-item { display:flex; align-items:center; gap:8px; padding:4px 0; }
+.mf-dot-col { display:flex; flex-direction:column; align-items:center; gap:0; flex-shrink:0; }
+.mf-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.mf-connector { width:2px; height:12px; }
+.mf-label { font-size:10.5px; font-weight:600; color:#8AAACE; line-height:1.3; }
+.mf-tech { font-size:9px; font-weight:700; padding:1px 7px; border-radius:4px; margin-left:4px; flex-shrink:0; }
+
+/* METRICS */
+.metrics { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.metric-row { display:flex; flex-direction:column; gap:4px; }
+.metric-lbl { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#3A5070; }
+.metric-bar-row { display:flex; align-items:center; gap:8px; }
+.metric-bar-bg { flex:1; height:5px; border-radius:3px; background:rgba(255,255,255,0.06); overflow:hidden; }
+.metric-bar-fill { height:100%; border-radius:3px; }
+.metric-val { font-size:11px; font-weight:700; white-space:nowrap; }
+
+/* STARS */
+.stars { display:flex; gap:3px; }
+.star { font-size:12px; }
+.star.off { opacity:0.15; }
+
+/* TAG ROW */
+.tags { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+.tag-chip {
+  font-size:9px; font-weight:700; padding:3px 9px;
+  border-radius:20px; border:1px solid; white-space:nowrap;
+  letter-spacing:0.3px;
+}
+
+/* SEPARATOR */
+.uc-sep { height:1px; background:rgba(255,255,255,0.05); margin:14px 0; }
+
+/* NEXT ACTION */
+.uc-action { padding:10px 12px; border-radius:10px; border:1px solid; }
+.action-lbl { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; opacity:0.6; margin-bottom:3px; }
+.action-text { font-size:11px; font-weight:600; line-height:1.4; }
+
+/* ═══ COMPARISON MATRIX ═══ */
+.matrix-section { margin-bottom:36px; }
+.matrix-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+.matrix-card {
+  border-radius:14px; padding:18px;
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.06);
+  display:flex; flex-direction:column; gap:6px;
+}
+.matrix-card-title { font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#3A5070; }
+.matrix-table { width:100%; border-collapse:collapse; }
+.matrix-table tr:not(:last-child) td { border-bottom:1px solid rgba(255,255,255,0.04); }
+.matrix-table td { padding:7px 0; font-size:11px; vertical-align:middle; }
+.matrix-table td:first-child { color:#5A7090; width:40%; }
+.matrix-table td:last-child { font-weight:600; text-align:right; }
+
+/* BUBBLE CHART (CSS) */
+.bubble-chart {
+  position:relative;
+  width:100%; height:220px;
+  border:1px solid rgba(255,255,255,0.06);
+  border-radius:14px;
+  background:rgba(255,255,255,0.01);
+  overflow:hidden;
+  grid-column: 1 / -1;
+  margin-bottom:4px;
+}
+.axis-lbl-y {
+  position:absolute; left:14px; top:50%; transform:translateY(-50%) rotate(-90deg);
+  font-size:9px; font-weight:700; color:#3A5070; letter-spacing:1px; text-transform:uppercase;
+  white-space:nowrap;
+}
+.axis-lbl-x {
+  position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+  font-size:9px; font-weight:700; color:#3A5070; letter-spacing:1px; text-transform:uppercase;
+}
+.axis-line-y { position:absolute; left:48px; top:20px; bottom:30px; width:1px; background:rgba(255,255,255,0.06); }
+.axis-line-x { position:absolute; left:48px; right:20px; bottom:30px; height:1px; background:rgba(255,255,255,0.06); }
+.bubble {
+  position:absolute;
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; font-weight:800; text-align:center;
+  line-height:1.2;
+  cursor:default;
+  border:2px solid;
+  transition:transform 0.2s;
+}
+.bubble:hover { transform:scale(1.1); }
+.axis-tick { position:absolute; font-size:8px; color:#2A3A50; }
+
+/* GRID LINES */
+.grid-line-h { position:absolute; left:48px; right:20px; height:1px; background:rgba(255,255,255,0.03); }
+.grid-line-v { position:absolute; top:20px; bottom:30px; width:1px; background:rgba(255,255,255,0.03); }
+
+/* ═══ ROADMAP ═══ */
+.roadmap-section { }
+.roadmap-grid {
+  display:grid;
+  grid-template-columns:180px 1fr;
+  gap:0;
+}
+.phase-col {
+  display:flex; flex-direction:column;
+  border-right:2px solid rgba(255,255,255,0.06);
+  padding-right:20px;
+  gap:0;
+}
+.steps-col { padding-left:20px; display:flex; flex-direction:column; gap:0; }
+
+.phase-item {
+  display:flex; flex-direction:column;
+  padding:16px 0;
+  position:relative;
+}
+.phase-item:not(:last-child)::after {
+  content:'';
+  position:absolute; right:-21px; top:0; bottom:0;
+  width:2px;
+}
+.phase-num { font-size:9px; font-weight:800; letter-spacing:2px; text-transform:uppercase; opacity:0.5; margin-bottom:4px; }
+.phase-name { font-size:13px; font-weight:700; color:#fff; margin-bottom:3px; }
+.phase-time { font-size:10px; color:#3A5070; font-weight:500; }
+
+.step-group { padding:16px 0; position:relative; }
+.step-group:not(:last-child) { border-bottom:1px solid rgba(255,255,255,0.04); }
+
+.step-rows { display:flex; flex-direction:column; gap:7px; }
+.step-row {
+  display:flex; align-items:flex-start; gap:10px;
+  padding:8px 12px;
+  border-radius:10px;
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(255,255,255,0.05);
+}
+.step-icon {
+  width:28px; height:28px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.step-icon svg { width:13px; height:13px; }
+.step-content { flex:1; }
+.step-title { font-size:11.5px; font-weight:700; color:#C8D8F0; margin-bottom:2px; }
+.step-detail { font-size:10px; color:#3A5070; line-height:1.4; }
+.step-badge {
+  flex-shrink:0;
+  font-size:8px; font-weight:800;
+  padding:2px 8px; border-radius:20px;
+  letter-spacing:0.5px; text-transform:uppercase;
+  align-self:center;
+}
+
+/* KEY INSIGHT BOX */
+.insight-box {
+  border-radius:14px; padding:18px 20px;
+  display:flex; align-items:flex-start; gap:16px;
+  margin-bottom:28px;
+  background:linear-gradient(135deg,#0A1428,#060E1C);
+  border:1px solid #1E3A6E;
+}
+.insight-icon {
+  width:40px; height:40px; border-radius:12px;
+  background:#1E3A6E;
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0;
+}
+.insight-icon svg { width:18px; height:18px; }
+.insight-title { font-size:13px; font-weight:800; color:#60A5FA; margin-bottom:4px; }
+.insight-text { font-size:11.5px; color:#4A7090; line-height:1.6; }
+
+/* FOOTER */
+.footer { margin-top:32px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.05); display:flex; flex-wrap:wrap; gap:10px; }
+.f-pill { display:flex; align-items:center; gap:6px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:20px; padding:5px 13px; font-size:10px; color:#3A5070; font-weight:500; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-tag">RAIS × Immobilienverwaltung Haller · Andernach · Discovery Call</div>
+  <div class="hdr-title">Use Case Vergleich, Bewertung & Roadmap</div>
+  <div class="hdr-sub">Alle drei Use Cases im Überblick · Mehrwert · Aufwand · Nächste Schritte</div>
+</div>
+
+<!-- KEY INSIGHT -->
+<div class="insight-box">
+  <div class="insight-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  </div>
+  <div>
+    <div class="insight-title">Strategische Ausgangslage</div>
+    <div class="insight-text">300+ ImmoScout-Anfragen täglich bei Haller — das ist der entscheidende Fakt. UC2 ist deshalb kein "nice to have" sondern ein operativer Engpass der sofort gelöst werden muss. UC1 (Wissensdatenbank) ist schnell gebaut, aber der ROI ist weich. UC3 (Mahnwesen) ist klar sinnvoll, aber erst nach UC2 — der Discovery Call klärt die technischen Voraussetzungen.</div>
+  </div>
+</div>
+
+<!-- ═══ USE CASE COLUMNS ═══ -->
+<div class="sec-lbl"><span>Struktur & Bewertung</span></div>
+
+<div class="uc-grid">
+
+  <!-- UC1 INTERNAL GPT -->
+  <div class="uc-card uc1">
+    <div class="uc-topbar">
+      <div class="uc-num accent">Use Case 1</div>
+      <div class="uc-name">Interne Wissensdatenbank</div>
+      <div class="uc-desc">KI-gestützter Chat-Assistent der auf interne Dokumente (OneDrive) zugreift — Mitarbeiter stellen Fragen in Sprache statt Ordner zu durchsuchen.</div>
+    </div>
+    <div class="uc-body">
+
+      <div class="mini-flow">
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">OneDrive / SharePoint <span class="mf-tech accent-bg accent" style="border:1px solid #0E3A3A;">Microsoft Graph API</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">n8n Ingestion Pipeline <span class="mf-tech accent-bg accent" style="border:1px solid #0E3A3A;">täglich + Webhook</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">Mistral Embeddings <span class="mf-tech accent-bg accent" style="border:1px solid #0E3A3A;">mistral-embed</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">Supabase pgvector <span class="mf-tech accent-bg accent" style="border:1px solid #0E3A3A;">Similarity Search</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div></div>
+          <div class="mf-label">Chat Interface <span class="mf-tech accent-bg accent" style="border:1px solid #0E3A3A;">Vercel</span></div>
+        </div>
+      </div>
+
+      <div class="uc-sep"></div>
+
+      <div class="metrics">
+        <div class="metric-row">
+          <div class="metric-lbl">Mehrwert</div>
+          <div class="metric-bar-row">
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:50%;background:#2DD4BF;"></div></div>
+            <div class="metric-val accent">Mittel</div>
+          </div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Aufwand</div>
+          <div class="metric-bar-row">
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:30%;background:#2DD4BF;"></div></div>
+            <div class="metric-val accent">Niedrig</div>
+          </div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">ROI-Klarheit</div>
+          <div class="metric-bar-row">
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:35%;background:#2DD4BF;"></div></div>
+            <div class="metric-val accent">Weich</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tags">
+        <span class="tag-chip" style="border-color:#0E3A3A;color:#2DD4BF;background:rgba(45,212,191,0.06);">1–2 Wochen</span>
+        <span class="tag-chip" style="border-color:#0E3A3A;color:#2DD4BF;background:rgba(45,212,191,0.06);">Microsoft 365 nötig</span>
+        <span class="tag-chip" style="border-color:#0E3A3A;color:#2DD4BF;background:rgba(45,212,191,0.06);">DSGVO-sensitiv</span>
+      </div>
+
+      <div class="uc-sep"></div>
+
+      <div class="uc-action" style="background:rgba(45,212,191,0.04);border-color:#0E3A3A;">
+        <div class="action-lbl accent">Priorität</div>
+        <div class="action-text" style="color:#8AAACE;">3 — Upsell nach UC2. Beim Call fragen ob Microsoft 365 vorhanden. Wenn ja, erwähnen als zusätzliches Modul.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- UC2 LEAD QUALIFICATION (MAIN) -->
+  <div class="uc-card uc2" style="padding-top:14px;">
+    <div class="uc2-main-badge">Hauptprodukt · Sofort starten</div>
+    <div class="uc-topbar">
+      <div class="uc-num accent">Use Case 2</div>
+      <div class="uc-name">Lead-Qualifizierung & Terminmanagement</div>
+      <div class="uc-desc">Vollautomatischer Prozess von ImmoScout-Anfrage bis zum bestätigten Besichtigungstermin — inkl. Dokumenten-Upload, KI-Analyse, HITL und Slot-Management.</div>
+    </div>
+    <div class="uc-body">
+
+      <div class="mini-flow">
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">ImmoScout24 DM <span class="mf-tech accent-bg accent" style="border:1px solid #1E3A6E;">REST API</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">n8n → UUID → Supabase <span class="mf-tech accent-bg accent" style="border:1px solid #1E3A6E;">Lead-DB</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">Landing Page Dokument-Upload <span class="mf-tech accent-bg accent" style="border:1px solid #1E3A6E;">DSGVO</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">Mistral Vollständigkeitsprüfung <span class="mf-tech accent-bg accent" style="border:1px solid #1E3A6E;">AGG-konform</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">6h Batch HITL → GO/NO-GO <span class="mf-tech accent-bg accent" style="border:1px solid #1E3A6E;">Mensch entscheidet</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">Slot-DB → 24h Reservierung <span class="mf-tech accent-bg accent" style="border:1px solid #1E3A6E;">Supabase</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div></div>
+          <div class="mf-label">PDF Report + 90-Tage Auto-Delete <span class="mf-tech accent-bg accent" style="border:1px solid #1E3A6E;">automatisch</span></div>
+        </div>
+      </div>
+
+      <div class="uc-sep"></div>
+
+      <div class="metrics">
+        <div class="metric-row">
+          <div class="metric-lbl">Mehrwert</div>
+          <div class="metric-bar-row">
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:95%;background:#3B82F6;"></div></div>
+            <div class="metric-val accent">Sehr hoch</div>
+          </div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Aufwand</div>
+          <div class="metric-bar-row">
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:80%;background:#3B82F6;"></div></div>
+            <div class="metric-val accent">Hoch</div>
+          </div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">ROI-Klarheit</div>
+          <div class="metric-bar-row">
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:90%;background:#3B82F6;"></div></div>
+            <div class="metric-val accent">Hart</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tags">
+        <span class="tag-chip" style="border-color:#1E3A6E;color:#60A5FA;background:rgba(96,165,250,0.06);">5–7 Wochen Build</span>
+        <span class="tag-chip" style="border-color:#1E3A6E;color:#60A5FA;background:rgba(96,165,250,0.06);">300+ Anfragen/Tag</span>
+        <span class="tag-chip" style="border-color:#1E3A6E;color:#60A5FA;background:rgba(96,165,250,0.06);">7 n8n Workflows</span>
+        <span class="tag-chip" style="border-color:#1E3A6E;color:#60A5FA;background:rgba(96,165,250,0.06);">IS24 API Pflicht</span>
+      </div>
+
+      <div class="uc-sep"></div>
+
+      <div class="uc-action" style="background:rgba(59,130,246,0.08);border-color:#1E3A6E;">
+        <div class="action-lbl accent">Priorität</div>
+        <div class="action-text" style="color:#8AAACE;">1 — Hauptprodukt. Jetzt starten. IS24 API Permission beantragen, IS24 Credentials testen, Landing Page deployen, n8n Workflows aktivieren.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- UC3 MAHNWESEN -->
+  <div class="uc-card uc3">
+    <div class="uc-topbar">
+      <div class="uc-num accent">Use Case 3</div>
+      <div class="uc-name">Mahnwesen mit Human-in-the-Loop</div>
+      <div class="uc-desc">Automatische Überwachung von Mietzahlungen über Immoware24 oder Finapi, KI-generierte Mahnentwürfe, HITL-Freigabe per WhatsApp vor dem Versand.</div>
+    </div>
+    <div class="uc-body">
+
+      <div class="mini-flow">
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">Immoware24 / Finapi <span class="mf-tech accent-bg accent" style="border:1px solid #3D2800;">Zahlungsabgleich</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">n8n täglicher Check <span class="mf-tech accent-bg accent" style="border:1px solid #3D2800;">08:00 Uhr</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">Offene Posten erkannt <span class="mf-tech accent-bg accent" style="border:1px solid #3D2800;">Supabase</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">Mistral Mahnentwurf <span class="mf-tech accent-bg accent" style="border:1px solid #3D2800;">Stufe 1–3</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div><div class="mf-connector flow-line"></div></div>
+          <div class="mf-label">WhatsApp HITL → JA/NEIN <span class="mf-tech accent-bg accent" style="border:1px solid #3D2800;">360dialog</span></div>
+        </div>
+        <div class="mf-item">
+          <div class="mf-dot-col"><div class="mf-dot flow-dot"></div></div>
+          <div class="mf-label">Mahnung versendet <span class="mf-tech accent-bg accent" style="border:1px solid #3D2800;">Email</span></div>
+        </div>
+      </div>
+
+      <div class="uc-sep"></div>
+
+      <div class="metrics">
+        <div class="metric-row">
+          <div class="metric-lbl">Mehrwert</div>
+          <div class="metric-bar-row">
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:75%;background:#FBBF24;"></div></div>
+            <div class="metric-val accent">Hoch</div>
+          </div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">Aufwand</div>
+          <div class="metric-bar-row">
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:45%;background:#FBBF24;"></div></div>
+            <div class="metric-val accent">Mittel</div>
+          </div>
+        </div>
+        <div class="metric-row">
+          <div class="metric-lbl">ROI-Klarheit</div>
+          <div class="metric-bar-row">
+            <div class="metric-bar-bg"><div class="metric-bar-fill" style="width:60%;background:#FBBF24;"></div></div>
+            <div class="metric-val accent">Mittel-Hart</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tags">
+        <span class="tag-chip" style="border-color:#3D2800;color:#FBBF24;background:rgba(251,191,36,0.06);">2–3 Wochen</span>
+        <span class="tag-chip" style="border-color:#3D2800;color:#FBBF24;background:rgba(251,191,36,0.06);">Finapi nötig</span>
+        <span class="tag-chip" style="border-color:#3D2800;color:#FBBF24;background:rgba(251,191,36,0.06);">Discovery Call klärt</span>
+      </div>
+
+      <div class="uc-sep"></div>
+
+      <div class="uc-action" style="background:rgba(251,191,36,0.04);border-color:#3D2800;">
+        <div class="action-lbl accent">Priorität</div>
+        <div class="action-text" style="color:#8AAACE;">2 — Phase 2 nach UC2. Beim Call: eine Frage stellen ("Wie läuft Mahnwesen aktuell?"), Antwort notieren, Thema parken.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ MATRIX ═══ -->
+<div class="sec-lbl"><span>Mehrwert vs. Aufwand — Positionierung</span></div>
+
+<div class="matrix-section">
+  <div class="matrix-grid">
+
+    <!-- BUBBLE CHART -->
+    <div class="bubble-chart">
+      <div class="axis-lbl-y">MEHRWERT</div>
+      <div class="axis-lbl-x">AUFWAND</div>
+      <div class="axis-line-y"></div>
+      <div class="axis-line-x"></div>
+
+      <!-- Grid lines -->
+      <div class="grid-line-h" style="bottom:30px;top:auto;height:1px;top:calc(20px + (100% - 50px) * 0.333);"></div>
+      <div class="grid-line-h" style="top:calc(20px + (100% - 50px) * 0.666);"></div>
+      <div class="grid-line-v" style="left:calc(48px + (100% - 68px) * 0.333);"></div>
+      <div class="grid-line-v" style="left:calc(48px + (100% - 68px) * 0.666);"></div>
+
+      <!-- Axis ticks -->
+      <div class="axis-tick" style="left:58px;bottom:14px;">Niedrig</div>
+      <div class="axis-tick" style="right:24px;bottom:14px;">Hoch</div>
+      <div class="axis-tick" style="left:52px;top:22px;">Hoch</div>
+      <div class="axis-tick" style="left:52px;bottom:38px;">Niedrig</div>
+
+      <!-- UC1: Aufwand niedrig (25%), Mehrwert mittel (50%) -->
+      <div class="bubble" style="
+        width:70px;height:70px;
+        left:calc(48px + (100% - 68px) * 0.22 - 35px);
+        top:calc(20px + (100% - 50px) * 0.42 - 35px);
+        background:rgba(13,56,56,0.8);
+        border-color:#2DD4BF;
+        color:#2DD4BF;
+        font-size:8.5px;
+      ">UC1<br>Wissens-<br>DB</div>
+
+      <!-- UC2: Aufwand hoch (80%), Mehrwert sehr hoch (90%) -->
+      <div class="bubble" style="
+        width:90px;height:90px;
+        left:calc(48px + (100% - 68px) * 0.75 - 45px);
+        top:calc(20px + (100% - 50px) * 0.07 - 45px);
+        background:rgba(13,28,58,0.9);
+        border-color:#3B82F6;
+        color:#60A5FA;
+        font-size:8.5px;
+        box-shadow:0 0 20px rgba(59,130,246,0.2);
+      ">UC2<br>Lead-<br>Quali.</div>
+
+      <!-- UC3: Aufwand mittel (45%), Mehrwert hoch (70%) -->
+      <div class="bubble" style="
+        width:75px;height:75px;
+        left:calc(48px + (100% - 68px) * 0.40 - 37px);
+        top:calc(20px + (100% - 50px) * 0.22 - 37px);
+        background:rgba(40,24,0,0.8);
+        border-color:#FBBF24;
+        color:#FBBF24;
+        font-size:8.5px;
+      ">UC3<br>Mahn-<br>wesen</div>
+
+      <!-- ZONE LABEL: Sweet Spot -->
+      <div style="position:absolute;right:28px;top:26px;font-size:8px;color:#1E3A6E;font-weight:700;letter-spacing:1px;text-transform:uppercase;">SWEET SPOT</div>
+    </div>
+
+    <!-- COMPARISON TABLE -->
+    <div class="matrix-card">
+      <div class="matrix-card-title">Zeitplan</div>
+      <table class="matrix-table">
+        <tr><td>UC1 Wissensdatenbank</td><td style="color:#2DD4BF;">1–2 Wochen</td></tr>
+        <tr><td>UC2 Lead-Qualifizierung</td><td style="color:#60A5FA;">5–7 Wochen</td></tr>
+        <tr><td>UC3 Mahnwesen</td><td style="color:#FBBF24;">2–3 Wochen</td></tr>
+        <tr><td>Gesamt (sequenziell)</td><td style="color:#E2EAF8;">8–12 Wochen</td></tr>
+      </table>
+    </div>
+
+    <div class="matrix-card">
+      <div class="matrix-card-title">Laufende Kosten / Monat</div>
+      <table class="matrix-table">
+        <tr><td>Mistral API</td><td style="color:#E2EAF8;">~€5–30</td></tr>
+        <tr><td>Supabase</td><td style="color:#E2EAF8;">€0–25</td></tr>
+        <tr><td>Finapi (UC3)</td><td style="color:#E2EAF8;">~€50–100</td></tr>
+        <tr><td>360dialog WhatsApp</td><td style="color:#E2EAF8;">~€50</td></tr>
+        <tr><td>n8n</td><td style="color:#22C55E;">bereits vorhanden</td></tr>
+      </table>
+    </div>
+
+    <div class="matrix-card">
+      <div class="matrix-card-title">Offene Blocker</div>
+      <table class="matrix-table">
+        <tr><td>IS24 API Permission</td><td style="color:#F87171;">⚠ ausstehend</td></tr>
+        <tr><td>IS24 DM Reply via API</td><td style="color:#F87171;">⚠ zu testen</td></tr>
+        <tr><td>Immoware24 API?</td><td style="color:#FBBF24;">Call klärt</td></tr>
+        <tr><td>Microsoft 365?</td><td style="color:#FBBF24;">Call klärt</td></tr>
+        <tr><td>Landing Page Deploy</td><td style="color:#22C55E;">bereit</td></tr>
+      </table>
+    </div>
+
+    <div class="matrix-card">
+      <div class="matrix-card-title">Preisempfehlung RAIS</div>
+      <table class="matrix-table">
+        <tr><td>UC2 Setup</td><td style="color:#60A5FA;">€3.500–4.500</td></tr>
+        <tr><td>UC3 Setup</td><td style="color:#FBBF24;">€1.500–2.000</td></tr>
+        <tr><td>UC1 Setup</td><td style="color:#2DD4BF;">€800–1.200</td></tr>
+        <tr><td>Retainer alle 3 UCs</td><td style="color:#E2EAF8;">€350–450/Mo</td></tr>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ ROADMAP ═══ -->
+<div class="sec-lbl"><span>Konkrete nächste Schritte</span></div>
+
+<div class="roadmap-grid">
+
+  <div class="phase-col">
+    <div class="phase-item">
+      <div class="phase-num" style="color:#60A5FA;">Phase 0</div>
+      <div class="phase-name">Discovery Call</div>
+      <div class="phase-time">Heute</div>
+    </div>
+    <div class="phase-item">
+      <div class="phase-num" style="color:#60A5FA;">Phase 1</div>
+      <div class="phase-name">IS24 API + Infra</div>
+      <div class="phase-time">Woche 1–2</div>
+    </div>
+    <div class="phase-item">
+      <div class="phase-num" style="color:#60A5FA;">Phase 2</div>
+      <div class="phase-name">UC2 Core Build</div>
+      <div class="phase-time">Woche 3–7</div>
+    </div>
+    <div class="phase-item">
+      <div class="phase-num" style="color:#FBBF24;">Phase 3</div>
+      <div class="phase-name">UC3 Mahnwesen</div>
+      <div class="phase-time">Woche 8–10</div>
+    </div>
+    <div class="phase-item">
+      <div class="phase-num" style="color:#2DD4BF;">Phase 4</div>
+      <div class="phase-name">UC1 Wissens-DB</div>
+      <div class="phase-time">Woche 11–12</div>
+    </div>
+  </div>
+
+  <div class="steps-col">
+
+    <!-- PHASE 0 -->
+    <div class="step-group">
+      <div class="step-rows">
+        <div class="step-row">
+          <div class="step-icon" style="background:#0D1F3C;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">4 Pflichtfragen stellen + UI zeigen</div>
+            <div class="step-detail">Ökosystem (Microsoft/Google)? Wie läuft Mahnwesen? Immoware24 Mietkonto verknüpft? Wie viele Anfragen pro Woche Neuvermietung?</div>
+          </div>
+          <div class="step-badge" style="background:#0D1F3C;border:1px solid #1E3A6E;color:#60A5FA;">Heute</div>
+        </div>
+        <div class="step-row">
+          <div class="step-icon" style="background:#0D1F3C;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Immoware24 UI live ansehen lassen</div>
+            <div class="step-detail">Bitte den Sohn kurz zeigen was sie täglich machen — 2 Minuten Screen zeigen reicht.</div>
+          </div>
+          <div class="step-badge" style="background:#0D1F3C;border:1px solid #1E3A6E;color:#60A5FA;">Heute</div>
+        </div>
+        <div class="step-row">
+          <div class="step-icon" style="background:#0D1F3C;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Kein Commitment heute</div>
+            <div class="step-detail">Discovery, nicht Sales. Verstehen ob und wie du helfen kannst. Erst nach Call entscheiden ob UC2 oder UC3 zuerst.</div>
+          </div>
+          <div class="step-badge" style="background:#3D1010;border:1px solid #5D1A1A;color:#F87171;">Wichtig</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 1 -->
+    <div class="step-group">
+      <div class="step-rows">
+        <div class="step-row">
+          <div class="step-icon" style="background:#00AF41;border-radius:8px;">
+            <svg viewBox="0 0 24 24" fill="white"><path d="M12 2L2 10h3v10h6v-5h2v5h6V10h3L12 2z"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">IS24 API Permission beantragen</div>
+            <div class="step-detail">Permission Request Formular ausfüllen: "Nachrichten lesen + senden für automatisierte Lead-Qualifizierung". Dann testen ob Links in DMs ankommen.</div>
+          </div>
+          <div class="step-badge" style="background:#0A2010;border:1px solid #1A4020;color:#22C55E;">Woche 1</div>
+        </div>
+        <div class="step-row">
+          <div class="step-icon" style="background:#1C1C1C;">
+            <svg viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="6" rx="9" ry="3" fill="#3ECF8E"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" stroke="#3ECF8E" stroke-width="1.5" fill="none"/><path d="M3 6v12c0 1.66 4 3 9 3s9-1.34 9-3V6" stroke="#3ECF8E" stroke-width="1.5" fill="none"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Supabase Tabellen anlegen</div>
+            <div class="step-detail">leads, besichtigungsslots, mahnung_log — alle Schemas aus den Docs. Row Level Security aktivieren.</div>
+          </div>
+          <div class="step-badge" style="background:#0A2010;border:1px solid #1A4020;color:#22C55E;">Woche 1</div>
+        </div>
+        <div class="step-row">
+          <div class="step-icon" style="background:#000000;border:1px solid #333;border-radius:8px;">
+            <svg viewBox="0 0 24 24" fill="white"><polygon points="12,3 22,21 2,21"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Landing Page auf Vercel deployen</div>
+            <div class="step-detail">Cursor-Build deployen, Supabase verbinden, DSGVO-Checkbox testen, Token-Routing testen.</div>
+          </div>
+          <div class="step-badge" style="background:#0A2010;border:1px solid #1A4020;color:#22C55E;">Woche 2</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 2 -->
+    <div class="step-group">
+      <div class="step-rows">
+        <div class="step-row">
+          <div class="step-icon" style="background:#EA4B26;">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="5" cy="12" r="3" fill="white"/><circle cx="19" cy="6" r="2.5" fill="white" opacity="0.9"/><circle cx="19" cy="18" r="2.5" fill="white" opacity="0.9"/><line x1="8" y1="10.5" x2="17" y2="7.2" stroke="white" stroke-width="1.5"/><line x1="8" y1="13.5" x2="17" y2="16.8" stroke="white" stroke-width="1.5"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">WF1–WF7 in n8n aktivieren + konfigurieren</div>
+            <div class="step-detail">Alle 7 Workflows importiert, Credentials eintragen, Webhook-URLs aus n8n in Landing Page + HITL-UI einbauen.</div>
+          </div>
+          <div class="step-badge" style="background:#0A2010;border:1px solid #1A4020;color:#22C55E;">Woche 3–4</div>
+        </div>
+        <div class="step-row">
+          <div class="step-icon" style="background:linear-gradient(135deg,#FF7000,#CC4400);">
+            <svg viewBox="0 0 24 24" fill="white"><rect x="2" y="2" width="5" height="5" rx="0.5"/><rect x="9.5" y="2" width="5" height="5" rx="0.5" opacity="0.8"/><rect x="2" y="9.5" width="5" height="5" rx="0.5" opacity="0.8"/><rect x="9.5" y="9.5" width="5" height="5" rx="0.5"/><rect x="17" y="2" width="5" height="5" rx="0.5" opacity="0.6"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Mistral Prompt tunen + HITL UI bauen</div>
+            <div class="step-detail">Vollständigkeits-Prompt mit echten Dokumenten testen, HITL-Interface für Mitarbeiter bauen (Next.js), Batch-Email testen.</div>
+          </div>
+          <div class="step-badge" style="background:#0A2010;border:1px solid #1A4020;color:#22C55E;">Woche 5–6</div>
+        </div>
+        <div class="step-row">
+          <div class="step-icon" style="background:#0D1F3C;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#60A5FA" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">End-to-End Test + Go-Live UC2</div>
+            <div class="step-detail">Echten Test-Lead durch den vollständigen Flow schicken. Timing, DMs, Slots, Report prüfen. Haller nimmt System live.</div>
+          </div>
+          <div class="step-badge" style="background:#0A2010;border:1px solid #1A4020;color:#22C55E;">Woche 7</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 3 -->
+    <div class="step-group">
+      <div class="step-rows">
+        <div class="step-row">
+          <div class="step-icon" style="background:#3D2800;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">Finapi Setup + Immoware24 Klärung</div>
+            <div class="step-detail">Basierend auf Call-Ergebnis: Finapi "Access for own use" oder Immoware24 CSV-Export als Datenquelle. Mietkonto verbinden.</div>
+          </div>
+          <div class="step-badge" style="background:#1E1200;border:1px solid #3D2800;color:#FBBF24;">Woche 8</div>
+        </div>
+        <div class="step-row">
+          <div class="step-icon" style="background:#3D2800;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">UC3 n8n Workflows + WhatsApp HITL</div>
+            <div class="step-detail">Zahlungsabgleich-Workflow, Mahnstufen 1–3, Mistral-Template, 360dialog WhatsApp-Kanal. Mahnstufe 3 immer manuell.</div>
+          </div>
+          <div class="step-badge" style="background:#1E1200;border:1px solid #3D2800;color:#FBBF24;">Woche 9–10</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PHASE 4 -->
+    <div class="step-group">
+      <div class="step-rows">
+        <div class="step-row">
+          <div class="step-icon" style="background:#0A2828;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#2DD4BF" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="step-content">
+            <div class="step-title">UC1 Wissensdatenbank (falls OneDrive vorhanden)</div>
+            <div class="step-detail">Azure App Registration, Graph API Ingestion, pgvector Setup, Chat-Interface. Nur wenn Haller Microsoft 365 aktiv nutzt.</div>
+          </div>
+          <div class="step-badge" style="background:#071C1C;border:1px solid #0E3A3A;color:#2DD4BF;">Woche 11–12</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="f-pill"><div style="width:6px;height:6px;border-radius:50%;background:#60A5FA;flex-shrink:0;"></div>UC2 ist das Hauptprodukt — 300+ Anfragen/Tag machen den ROI offensichtlich</div>
+  <div class="f-pill"><div style="width:6px;height:6px;border-radius:50%;background:#FBBF24;flex-shrink:0;"></div>UC3 erst nach Discovery Call entscheiden — Finapi vs Immoware24 unklar</div>
+  <div class="f-pill"><div style="width:6px;height:6px;border-radius:50%;background:#2DD4BF;flex-shrink:0;"></div>UC1 nur wenn Microsoft 365 aktiv — sonst kein Upsell pushen</div>
+  <div class="f-pill"><div style="width:6px;height:6px;border-radius:50%;background:#F87171;flex-shrink:0;"></div>IS24 API Permission ist der kritische Blocker — sofort nach Call beantragen</div>
+</div>
+
+</div>
+</body>
+</html>

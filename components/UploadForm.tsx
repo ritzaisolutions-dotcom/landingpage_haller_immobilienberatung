@@ -2,12 +2,13 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
+import { DsgvoConsent } from "@/components/DsgvoConsent";
 import { DemoBanner } from "@/components/DemoBanner";
 import { PortalHeader } from "@/components/PortalHeader";
 import { SubmitSpinner, UploadZone } from "@/components/UploadZone";
 import { SuccessScreen } from "@/components/SuccessScreen";
 import { simulateDemoUpload } from "@/lib/demo";
-import { DSGVO_TEXT, Lead } from "@/lib/types";
+import { Lead } from "@/lib/types";
 import { submitLeadDocuments, uploadFiles, UploadTarget } from "@/lib/uploadFiles";
 
 type UploadFormProps = {
@@ -25,7 +26,7 @@ export function UploadForm({ lead, demoMode = false }: UploadFormProps) {
   const [schufa, setSchufa] = useState<File[]>([]);
   const [entgelt, setEntgelt] = useState<File[]>([]);
   const [buergschaft, setBuergschaft] = useState<File[]>([]);
-  const [dsgvo, setDsgvo] = useState(demoMode);
+  const [dsgvo, setDsgvo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -188,15 +189,7 @@ export function UploadForm({ lead, demoMode = false }: UploadFormProps) {
             progress={progress}
           />
 
-          <label className="flex items-start gap-3 rounded-lg border border-haller-border bg-haller-bg/40 p-3">
-            <input
-              type="checkbox"
-              checked={dsgvo}
-              onChange={(e) => setDsgvo(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-haller-border accent-haller-accent"
-            />
-            <span className="text-xs leading-relaxed text-haller-muted">{DSGVO_TEXT}</span>
-          </label>
+          <DsgvoConsent checked={dsgvo} onChange={setDsgvo} />
 
           {submitError ? (
             <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-300">
@@ -219,8 +212,18 @@ export function UploadForm({ lead, demoMode = false }: UploadFormProps) {
             <Link href="/" className="text-haller-accent hover:underline">
               ← Zurück zur Demo-Übersicht
             </Link>
+            {" · "}
+            <Link href="/datenschutz" className="text-haller-accent hover:underline">
+              Datenschutzerklärung
+            </Link>
           </p>
-        ) : null}
+        ) : (
+          <p className="mt-6 text-center text-xs text-haller-muted">
+            <Link href="/datenschutz" className="text-haller-accent hover:underline">
+              Datenschutzerklärung
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );

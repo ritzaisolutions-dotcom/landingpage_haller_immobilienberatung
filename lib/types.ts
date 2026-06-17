@@ -11,9 +11,6 @@ export type Lead = {
   dsgvo_accepted_at: string | null;
 };
 
-export const DSGVO_TEXT =
-  "Ich stimme zu, dass meine hochgeladenen Unterlagen (Schufa-Auskunft, Einkommensnachweise) ausschließlich intern zur Bearbeitung meiner Mietanfrage durch die Immobilienverwaltung verarbeitet werden. Die Daten werden nach 90 Tagen automatisch gelöscht und nicht an Dritte weitergegeben. Diese Einwilligung kann ich jederzeit widerrufen.";
-
 export const TOKEN_MAX_AGE_MS = 72 * 60 * 60 * 1000;
 
 export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
