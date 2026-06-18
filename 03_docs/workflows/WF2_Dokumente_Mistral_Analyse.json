@@ -1,0 +1,264 @@
+{
+  "name": "WF2 – Dokumente eingereicht → Mistral Vollständigkeitsprüfung",
+  "nodes": [
+    {
+      "id": "7192f156-50d1-42ca-ae6a-05e735c74c61",
+      "name": "Webhook von Landing Page",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dokumente-eingereicht",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "webhookId": "94a6db81-7bb1-4d4c-a754-8bc50db6cbc2"
+    },
+    {
+      "id": "2588c845-22bf-4106-8493-e105fe2e9ce5",
+      "name": "Lead aus Supabase laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.leadUuid }}",
+        "returnAll": false,
+        "limit": 1
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "b790a7e8-8091-45a4-8bed-fa15dedd71a0",
+      "name": "Dokument-URLs aus Storage holen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/storage/v1/object/sign/dokumente",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"paths\": [\n    \"{{ $('Webhook von Landing Page').item.json.leadUuid }}/schufa.pdf\",\n    \"{{ $('Webhook von Landing Page').item.json.leadUuid }}/entgelt_1.pdf\",\n    \"{{ $('Webhook von Landing Page').item.json.leadUuid }}/entgelt_2.pdf\",\n    \"{{ $('Webhook von Landing Page').item.json.leadUuid }}/entgelt_3.pdf\"\n  ],\n  \"expiresIn\": 3600\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "e1af7430-bbf9-4712-a0a9-44edbe881158",
+      "name": "Dokumente als Text extrahieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// PDF Text-Extraktion aus Supabase Storage\n// Für jede signierte URL: HTTP GET → Binary → Text extrahieren\n// HINWEIS: In n8n Pro kann man binary data mit pdfjs verarbeiten\n// Hier wird ein strukturierter Prompt für Mistral vorbereitet\n\nconst leadData = $('Lead aus Supabase laden').item.json;\nconst signedUrls = $input.first().json;\n\n// Vereinfachter Ansatz: Prüfe welche Dateien existieren\nconst fileList = signedUrls\n  .filter(f => f.signedURL !== null)\n  .map(f => f.path.split('/')[1].replace('.pdf', ''));\n\nconst hatSchufa = fileList.includes('schufa');\nconst hatEntgelt1 = fileList.includes('entgelt_1');\nconst hatEntgelt2 = fileList.includes('entgelt_2');\nconst hatEntgelt3 = fileList.includes('entgelt_3');\n\nreturn [{\n  json: {\n    leadUuid: $('Webhook von Landing Page').item.json.leadUuid,\n    leadName: leadData.name,\n    inseratId: leadData.inserat_id,\n    email: $('Webhook von Landing Page').item.json.email,\n    telefon: $('Webhook von Landing Page').item.json.telefon,\n    hatSchufa,\n    hatEntgelt1,\n    hatEntgelt2,\n    hatEntgelt3,\n    anzahlEntgeltnachweise: [hatEntgelt1, hatEntgelt2, hatEntgelt3].filter(Boolean).length,\n    fileList,\n    mistralPrompt: `Analysiere die hochgeladenen Dokumente für eine Mietbewerbung.\n\nVorhandene Dokumente: ${fileList.join(', ')}\n\nPrüfe ausschließlich die VOLLSTÄNDIGKEIT der Unterlagen (kein Qualitätsurteil über die Person):\n1. Ist eine Schufa-Auskunft vorhanden? (Ja/Nein)\n2. Wie viele Einkommensnachweise sind vorhanden? (0-3, benötigt werden 3 Monate)\n3. Sind die Mindestanforderungen erfüllt? (Schufa + mind. 1 Entgeltnachweis)\n\nAntworte NUR mit JSON:\n{\n  \"schufa_vorhanden\": boolean,\n  \"anzahl_entgeltnachweise\": number,\n  \"mindestanforderung_erfuellt\": boolean,\n  \"fehlende_dokumente\": [\"liste\"],\n  \"vollstaendigkeits_score\": 0-100\n}`\n  }\n}];"
+      }
+    },
+    {
+      "id": "8361faba-8964-4655-aa9c-a4f84f049abe",
+      "name": "Mistral Vollständigkeitsprüfung",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.MISTRAL_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-small-latest\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Du bist ein Assistent einer Hausverwaltung. Du prüfst ausschließlich die formale Vollständigkeit von Bewerbungsunterlagen. Du machst KEIN Qualitätsurteil über Personen. Antworte immer nur mit validem JSON.\"\n    },\n    {\n      \"role\": \"user\", \n      \"content\": \"{{ $json.mistralPrompt }}\"\n    }\n  ],\n  \"temperature\": 0.1,\n  \"max_tokens\": 500\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "ef94c8b3-2121-49fc-9425-db6ab89ee1b1",
+      "name": "Mistral Antwort parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const mistralResponse = $input.first().json;\nconst content = mistralResponse.choices[0].message.content;\n\nlet analyse;\ntry {\n  // JSON aus Mistral-Antwort extrahieren\n  const jsonMatch = content.match(/\\{[\\s\\S]*\\}/);\n  analyse = JSON.parse(jsonMatch ? jsonMatch[0] : content);\n} catch(e) {\n  analyse = {\n    schufa_vorhanden: false,\n    anzahl_entgeltnachweise: 0,\n    mindestanforderung_erfuellt: false,\n    fehlende_dokumente: ['Parsing-Fehler'],\n    vollstaendigkeits_score: 0\n  };\n}\n\nconst prevData = $('Dokumente als Text extrahieren').item.json;\n\nreturn [{\n  json: {\n    ...prevData,\n    analyse,\n    bereit_fuer_hitl: analyse.mindestanforderung_erfuellt,\n    mistral_tokens: mistralResponse.usage?.total_tokens || 0\n  }\n}];"
+      }
+    },
+    {
+      "id": "2eb18bf2-6cff-47a7-abe1-4a751a04ff3d",
+      "name": "Analyse in Supabase speichern",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        300
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.leadUuid }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "telefon",
+              "fieldValue": "={{ $json.telefon }}"
+            },
+            {
+              "fieldId": "mistral_score",
+              "fieldValue": "={{ $json.analyse.vollstaendigkeits_score }}"
+            },
+            {
+              "fieldId": "fehlende_dokumente",
+              "fieldValue": "={{ JSON.stringify($json.analyse.fehlende_dokumente) }}"
+            },
+            {
+              "fieldId": "mindestanforderung_ok",
+              "fieldValue": "={{ $json.analyse.mindestanforderung_erfuellt }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "analyse_abgeschlossen"
+            },
+            {
+              "fieldId": "dokumente_eingereicht_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook von Landing Page": {
+      "main": [
+        [
+          {
+            "node": "Lead aus Supabase laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead aus Supabase laden": {
+      "main": [
+        [
+          {
+            "node": "Dokument-URLs aus Storage holen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dokument-URLs aus Storage holen": {
+      "main": [
+        [
+          {
+            "node": "Dokumente als Text extrahieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dokumente als Text extrahieren": {
+      "main": [
+        [
+          {
+            "node": "Mistral Vollständigkeitsprüfung",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Vollständigkeitsprüfung": {
+      "main": [
+        [
+          {
+            "node": "Mistral Antwort parsen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Antwort parsen": {
+      "main": [
+        [
+          {
+            "node": "Analyse in Supabase speichern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "a5e5936a-b4d0-4183-aa98-83151a59eefc"
+}

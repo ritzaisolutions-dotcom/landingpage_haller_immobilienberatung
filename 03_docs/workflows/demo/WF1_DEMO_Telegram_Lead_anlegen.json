@@ -1,0 +1,198 @@
+{
+  "name": "WF1 DEMO – Telegram Anfrage → Lead in Supabase → Link zurücksenden",
+  "nodes": [
+    {
+      "id": "21df1713-f954-49af-b4ca-d7b745359682",
+      "name": "Telegram Trigger (statt IS24)",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram RAIS Demo Bot"
+        }
+      }
+    },
+    {
+      "id": "e4e21482-7d29-4e6c-8c80-dc290b6a6dab",
+      "name": "Daten extrahieren + UUID generieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const msg = $input.first().json;\n\n// Telegram-Daten extrahieren (simuliert IS24-Anfrage)\nconst vorname = msg.message?.from?.first_name || 'Interessent';\nconst nachname = msg.message?.from?.last_name || '';\nconst name = `${vorname} ${nachname}`.trim();\nconst telegramChatId = msg.message?.chat?.id?.toString();\nconst messageText = msg.message?.text || '';\n\n// Demo Inserat-ID (in Produktion kommt das von IS24)\nconst inseratId = 'IS24-DEMO-48291';\n\n// UUID für diesen Lead\nconst crypto = require('crypto');\nconst leadUuid = crypto.randomUUID();\n\n// Unique Landing Page Link\nconst landingUrl = `https://landingpage-haller-immobilienberatu.vercel.app/upload?t=${leadUuid}`;\n\nreturn [{\n  json: {\n    name,\n    telegramChatId,\n    messageText,\n    inseratId,\n    leadUuid,\n    landingUrl,\n    anfragenDatum: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "f29258a1-24c9-4d47-b9b2-67fce585ed24",
+      "name": "Lead in Supabase anlegen",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "operation": "create",
+        "tableId": "leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "uuid",
+              "fieldValue": "={{ $json.leadUuid }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "inserat_id",
+              "fieldValue": "={{ $json.inseratId }}"
+            },
+            {
+              "fieldId": "nachricht_text",
+              "fieldValue": "={{ $json.messageText }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "neu"
+            },
+            {
+              "fieldId": "is24_contact_id",
+              "fieldValue": "={{ $json.telegramChatId }}"
+            },
+            {
+              "fieldId": "landing_page_url",
+              "fieldValue": "={{ $json.landingUrl }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "f1d3eee7-2e08-4900-858f-b7c26437b939",
+      "name": "Link via Telegram senden (statt IS24 DM)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Daten extrahieren + UUID generieren').item.json.telegramChatId }}",
+        "text": "=Guten Tag {{ $('Daten extrahieren + UUID generieren').item.json.name }},\n\nvielen Dank für Ihr Interesse an unserem Inserat ({{ $('Daten extrahieren + UUID generieren').item.json.inseratId }}).\n\nUm Ihre Bewerbung zu bearbeiten, bitten wir Sie, Ihre Unterlagen über folgenden Link einzureichen:\n\n{{ $('Daten extrahieren + UUID generieren').item.json.landingUrl }}\n\nBitte laden Sie dort hoch:\n📄 Aktuelle Schufa-Auskunft\n📄 Einkommensnachweise (letzte 3 Monate)\n\nIhre Daten werden verschlüsselt gespeichert und nach 90 Tagen automatisch gelöscht.\n\nMit freundlichen Grüßen\nHaller Immobilienberatung GmbH",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram RAIS Demo Bot"
+        }
+      }
+    },
+    {
+      "id": "c466cac0-9ecf-4b00-9d0b-3413b25c044d",
+      "name": "Status auf dm_gesendet setzen",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        300
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $('Daten extrahieren + UUID generieren').item.json.leadUuid }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "dm_gesendet"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Telegram Trigger (statt IS24)": {
+      "main": [
+        [
+          {
+            "node": "Daten extrahieren + UUID generieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daten extrahieren + UUID generieren": {
+      "main": [
+        [
+          {
+            "node": "Lead in Supabase anlegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead in Supabase anlegen": {
+      "main": [
+        [
+          {
+            "node": "Link via Telegram senden (statt IS24 DM)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Link via Telegram senden (statt IS24 DM)": {
+      "main": [
+        [
+          {
+            "node": "Status auf dm_gesendet setzen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "58a4dcf3-c63a-4baf-b314-9b1b675363e0"
+}

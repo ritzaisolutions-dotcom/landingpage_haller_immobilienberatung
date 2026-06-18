@@ -1,0 +1,5 @@
+# Supabase — IM24 Lead Qualifizierung (eu-central-1)
+project_id = "htyeflqymmbcjhvknjoe"
+
+[db]
+major_version = 17

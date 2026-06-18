@@ -1,0 +1,307 @@
+{
+  "name": "WF4 – HITL Entscheidung → GO / NO-GO → IS24 DM",
+  "nodes": [
+    {
+      "id": "562fdf93-a1cf-4fd1-8797-64f89aa0caac",
+      "name": "HITL Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "hitl-entscheidung",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "webhookId": "67a1db13-e50c-4d45-8a24-758818d22541"
+    },
+    {
+      "id": "7c2f1a2d-dbe2-4288-b6be-bf0754c69fb8",
+      "name": "Lead laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "returnAll": false,
+        "limit": 1,
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.leadUuid }}"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "af9a8955-bccf-4de8-a74b-cd35fe0c2854",
+      "name": "GO oder NO-GO?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "f20b0646-816b-42f2-a3d5-21bb3396f146",
+              "leftValue": "={{ $('HITL Webhook').item.json.entscheidung }}",
+              "rightValue": "go",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "7638c79e-24b3-46eb-8c94-608e3252c747",
+      "name": "Status qualifiziert setzen",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        900,
+        180
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $('HITL Webhook').item.json.leadUuid }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "qualifiziert"
+            },
+            {
+              "fieldId": "mitarbeiter_notiz",
+              "fieldValue": "={{ $('HITL Webhook').item.json.notiz || '' }}"
+            },
+            {
+              "fieldId": "entscheidung_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "af8b4e77-dd47-44ca-98dc-fb76e749ec4e",
+      "name": "GO DM senden + WF5 triggern",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        180
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://rest.immobilienscout24.de/restapi/api/offer/v1.0/user/ME/realestate/{{ $('Lead laden').item.json.inserat_id }}/contact/{{ $('Lead laden').item.json.is24_contact_id }}/message",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth1Api",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"message\": \"Guten Tag {{ $('Lead laden').item.json.name }},\\n\\nvielen Dank für Ihre Unterlagen – wir haben diese geprüft.\\n\\nWir würden Ihnen gerne einen Besichtigungstermin anbieten. Sie erhalten in Kürze eine weitere Nachricht mit einem konkreten Terminvorschlag.\\n\\nMit freundlichen Grüßen\\nImmobilienverwaltung Haller\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "oAuth1Api": {
+          "id": "IS24_OAUTH_CREDENTIAL_ID",
+          "name": "ImmoScout24 OAuth"
+        }
+      }
+    },
+    {
+      "id": "2f6d7953-6b08-45ef-9795-6fc6c4b4d673",
+      "name": "WF5 Slot-Check triggern",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        180
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.N8N_WEBHOOK_BASE_URL }}/webhook/slot-check",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"leadUuid\": \"{{ $('HITL Webhook').item.json.leadUuid }}\",\n  \"inseratId\": \"{{ $('Lead laden').item.json.inserat_id }}\",\n  \"leadName\": \"{{ $('Lead laden').item.json.name }}\",\n  \"is24ContactId\": \"{{ $('Lead laden').item.json.is24_contact_id }}\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "687163f2-dcc4-475c-af70-35dc26b5c07c",
+      "name": "Status abgelehnt setzen",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        900,
+        420
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $('HITL Webhook').item.json.leadUuid }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "abgelehnt"
+            },
+            {
+              "fieldId": "ablehnungsgrund",
+              "fieldValue": "={{ $('HITL Webhook').item.json.notiz || 'Unterlagen unvollständig' }}"
+            },
+            {
+              "fieldId": "entscheidung_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "014b3a22-d2b9-40a5-84cf-11fe5338c124",
+      "name": "NO-GO Absage DM senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://rest.immobilienscout24.de/restapi/api/offer/v1.0/user/ME/realestate/{{ $('Lead laden').item.json.inserat_id }}/contact/{{ $('Lead laden').item.json.is24_contact_id }}/message",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth1Api",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"message\": \"Guten Tag {{ $('Lead laden').item.json.name }},\\n\\nvielen Dank für Ihre Bewerbung und Ihr Interesse an unserer Wohnung.\\n\\nNach Prüfung Ihrer Unterlagen müssen wir Ihnen leider mitteilen, dass wir uns für eine andere Bewerbung entschieden haben.\\n\\nWir wünschen Ihnen bei Ihrer weiteren Wohnungssuche viel Erfolg.\\n\\nIhre eingereichten Unterlagen werden gemäß unserer Datenschutzerklärung nach 90 Tagen automatisch gelöscht.\\n\\nMit freundlichen Grüßen\\nImmobilienverwaltung Haller\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "oAuth1Api": {
+          "id": "IS24_OAUTH_CREDENTIAL_ID",
+          "name": "ImmoScout24 OAuth"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "HITL Webhook": {
+      "main": [
+        [
+          {
+            "node": "Lead laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead laden": {
+      "main": [
+        [
+          {
+            "node": "GO oder NO-GO?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GO oder NO-GO?": {
+      "main": [
+        [
+          {
+            "node": "Status qualifiziert setzen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Status abgelehnt setzen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status qualifiziert setzen": {
+      "main": [
+        [
+          {
+            "node": "GO DM senden + WF5 triggern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GO DM senden + WF5 triggern": {
+      "main": [
+        [
+          {
+            "node": "WF5 Slot-Check triggern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status abgelehnt setzen": {
+      "main": [
+        [
+          {
+            "node": "NO-GO Absage DM senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "ce2fc19c-e30a-4fa1-8973-7b341bc21c54"
+}

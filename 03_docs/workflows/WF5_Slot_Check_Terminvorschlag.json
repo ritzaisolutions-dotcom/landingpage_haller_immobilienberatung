@@ -1,0 +1,255 @@
+{
+  "name": "WF5 – Slot-Check → Terminvorschlag → Bestätigung",
+  "nodes": [
+    {
+      "id": "e180a507-b07c-44e4-a40f-f287cbb362c5",
+      "name": "Slot-Check Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "slot-check",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "9a76f8e1-df43-4635-9f37-0d84db87bc79"
+    },
+    {
+      "id": "0108b4f9-277b-45b6-bfa9-26fd6a57cb7d",
+      "name": "Freie Slots laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "besichtigungsslots",
+        "returnAll": false,
+        "limit": 3,
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.inseratId }}"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "1bfbe885-ea9e-439b-9d54-4421e2056e6e",
+      "name": "Freier Slot verfügbar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "2a944893-abdc-4b4f-b3c3-efc78e8b688c",
+              "leftValue": "={{ $input.all().filter(s => s.json.belegt < s.json.kapazitaet).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "1e922855-80cc-483a-8197-416a85fbe3b2",
+      "name": "Slot auswählen + reservieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        180
+      ],
+      "parameters": {
+        "jsCode": "const slots = $input.all()\n  .filter(s => s.json.belegt < s.json.kapazitaet)\n  .map(s => s.json);\n\n// Ersten freien Slot nehmen\nconst slot = slots[0];\nconst leadData = $('Slot-Check Webhook').item.json;\n\n// Datum formatieren\nconst datum = new Date(slot.datum_uhrzeit);\nconst datumFormatiert = datum.toLocaleString('de-DE', {\n  weekday: 'long', year: 'numeric', month: 'long',\n  day: 'numeric', hour: '2-digit', minute: '2-digit',\n  timeZone: 'Europe/Berlin'\n});\n\nconst ablaufZeit = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();\n\nreturn [{\n  json: {\n    slotId: slot.id,\n    slotDatum: slot.datum_uhrzeit,\n    slotDatumFormatiert: datumFormatiert,\n    slotAdresse: slot.objekt_adresse,\n    leadUuid: leadData.leadUuid,\n    leadName: leadData.leadName,\n    inseratId: leadData.inseratId,\n    is24ContactId: leadData.is24ContactId,\n    reserviertBis: ablaufZeit,\n    dmText: `Guten Tag ${leadData.leadName},\\n\\nwir freuen uns, Ihnen einen Besichtigungstermin anbieten zu können:\\n\\n📅 ${datumFormatiert}\\n📍 ${slot.objekt_adresse}\\n\\nDer Platz wird für Sie für 24 Stunden reserviert. Bitte antworten Sie mit \"JA, ich komme\" um den Termin zu bestätigen, oder \"Nein\" wenn Sie verhindert sind.\\n\\nMit freundlichen Grüßen\\nImmobilienverwaltung Haller`\n  }\n}];"
+      }
+    },
+    {
+      "id": "c4b054ab-ad60-4423-a67c-4e46bafb835a",
+      "name": "Slot temporär reservieren",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        180
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "besichtigungsslots",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.slotId }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "belegt",
+              "fieldValue": "={{ $json.belegt + 1 }}"
+            },
+            {
+              "fieldId": "reserviert_lead_uuid",
+              "fieldValue": "={{ $json.leadUuid }}"
+            },
+            {
+              "fieldId": "reserviert_bis",
+              "fieldValue": "={{ $json.reserviertBis }}"
+            },
+            {
+              "fieldId": "slot_status",
+              "fieldValue": "pending"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "82d80122-4c05-4635-910c-f43a6517925e",
+      "name": "Terminvorschlag DM senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        180
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://rest.immobilienscout24.de/restapi/api/offer/v1.0/user/ME/realestate/{{ $json.inseratId }}/contact/{{ $json.is24ContactId }}/message",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth1Api",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={ \"message\": \"{{ $json.dmText }}\" }",
+        "options": {}
+      },
+      "credentials": {
+        "oAuth1Api": {
+          "id": "IS24_OAUTH_CREDENTIAL_ID",
+          "name": "ImmoScout24 OAuth"
+        }
+      }
+    },
+    {
+      "id": "80b80d87-d840-449f-b28c-506555a60d04",
+      "name": "Kein Slot frei – Lead benachrichtigen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        420
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://rest.immobilienscout24.de/restapi/api/offer/v1.0/user/ME/realestate/{{ $('Slot-Check Webhook').item.json.inseratId }}/contact/{{ $('Slot-Check Webhook').item.json.is24ContactId }}/message",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth1Api",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"message\": \"Guten Tag {{ $('Slot-Check Webhook').item.json.leadName }},\\n\\nleider sind aktuell keine Besichtigungstermine verfügbar. Wir melden uns, sobald ein neuer Termin frei wird.\\n\\nMit freundlichen Grüßen\\nImmobilienverwaltung Haller\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "oAuth1Api": {
+          "id": "IS24_OAUTH_CREDENTIAL_ID",
+          "name": "ImmoScout24 OAuth"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Slot-Check Webhook": {
+      "main": [
+        [
+          {
+            "node": "Freie Slots laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Freie Slots laden": {
+      "main": [
+        [
+          {
+            "node": "Freier Slot verfügbar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Freier Slot verfügbar?": {
+      "main": [
+        [
+          {
+            "node": "Slot auswählen + reservieren",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Kein Slot frei – Lead benachrichtigen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slot auswählen + reservieren": {
+      "main": [
+        [
+          {
+            "node": "Slot temporär reservieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slot temporär reservieren": {
+      "main": [
+        [
+          {
+            "node": "Terminvorschlag DM senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "c4b40681-41a6-4ed7-8199-38d52c9460d3"
+}

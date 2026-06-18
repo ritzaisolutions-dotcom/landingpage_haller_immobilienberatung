@@ -1,0 +1,186 @@
+{
+  "name": "WF3 – 6h Batch Digest → Mitarbeiter HITL",
+  "nodes": [
+    {
+      "id": "dfb9ac9c-b1f4-420b-b031-6d3838177118",
+      "name": "Alle 6 Stunden",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "9cc26096-d637-48e8-8a30-3e00806a60d7",
+      "name": "Neue Leads aus Supabase laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "returnAll": true,
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "analyse_abgeschlossen"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "92403deb-08a8-49d9-9e93-95f0c3d41d12",
+      "name": "Leads vorhanden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "e0db4421-99bd-4f87-a50f-d934cd7047a7",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "18ae4ca4-7cc6-42cb-a37c-85f800cbbfd6",
+      "name": "Batch E-Mail formatieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        200
+      ],
+      "parameters": {
+        "jsCode": "const leads = $input.all().map(item => item.json);\nconst anzahl = leads.length;\nconst datum = new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' });\n\n// HTML Tabelle für Email\nlet tabelle = leads.map((l, i) => `\n  <tr style=\"background:${i % 2 === 0 ? '#f8f9fa' : '#ffffff'}\">\n    <td style=\"padding:10px;border:1px solid #dee2e6;\">${i+1}</td>\n    <td style=\"padding:10px;border:1px solid #dee2e6;font-weight:600;\">${l.name}</td>\n    <td style=\"padding:10px;border:1px solid #dee2e6;\">${l.inserat_id}</td>\n    <td style=\"padding:10px;border:1px solid #dee2e6;\">${l.mistral_score || 0}%</td>\n    <td style=\"padding:10px;border:1px solid #dee2e6;\">${l.mindestanforderung_ok ? '✅ Vollständig' : '⚠️ Unvollständig'}</td>\n    <td style=\"padding:10px;border:1px solid #dee2e6;\">\n      <a href=\"${process.env.HITL_UI_URL}/leads/${l.uuid}\" style=\"background:#3B82F6;color:white;padding:6px 14px;border-radius:4px;text-decoration:none;font-size:12px;\">Öffnen →</a>\n    </td>\n  </tr>\n`).join('');\n\nconst htmlBody = `\n<div style=\"font-family:Inter,sans-serif;max-width:700px;margin:0 auto;padding:24px;\">\n  <div style=\"background:#0D1F3C;padding:20px 24px;border-radius:12px 12px 0 0;\">\n    <h1 style=\"color:white;font-size:20px;margin:0;\">📋 ${anzahl} neue Lead${anzahl !== 1 ? 's' : ''} zur Prüfung</h1>\n    <p style=\"color:#6B8AAE;margin:4px 0 0;font-size:13px;\">Batch-Report · ${datum}</p>\n  </div>\n  <div style=\"border:1px solid #1A3A6A;border-top:none;border-radius:0 0 12px 12px;overflow:hidden;\">\n    <table style=\"width:100%;border-collapse:collapse;font-size:13px;\">\n      <thead>\n        <tr style=\"background:#1A3A6A;color:white;\">\n          <th style=\"padding:10px;\">#</th>\n          <th style=\"padding:10px;text-align:left;\">Name</th>\n          <th style=\"padding:10px;text-align:left;\">Inserat</th>\n          <th style=\"padding:10px;\">Score</th>\n          <th style=\"padding:10px;\">Status</th>\n          <th style=\"padding:10px;\">Aktion</th>\n        </tr>\n      </thead>\n      <tbody>${tabelle}</tbody>\n    </table>\n  </div>\n  <p style=\"color:#6B8AAE;font-size:11px;margin-top:16px;text-align:center;\">\n    Automatisch generiert von RAIS · Immobilienverwaltung Haller\n  </p>\n</div>`;\n\nreturn [{ json: { anzahl, datum, htmlBody, leads } }];"
+      }
+    },
+    {
+      "id": "aa5c9f8b-c00f-4dea-befb-3874648b58d2",
+      "name": "Batch Email senden",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        200
+      ],
+      "parameters": {
+        "fromEmail": "noreply@ritz-ai.solutions",
+        "toEmail": "MITARBEITER_EMAIL@haller-verwaltung.de",
+        "subject": "=📋 {{ $json.anzahl }} neue Lead(s) zur Prüfung – {{ $json.datum }}",
+        "emailType": "html",
+        "message": "={{ $json.htmlBody }}",
+        "options": {}
+      },
+      "credentials": {
+        "smtp": {
+          "id": "SMTP_CREDENTIAL_ID",
+          "name": "SMTP RAIS"
+        }
+      }
+    },
+    {
+      "id": "1b8b5e4a-0710-4550-aea6-554f7b741bb5",
+      "name": "Keine Leads – nichts tun",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        900,
+        420
+      ],
+      "parameters": {}
+    }
+  ],
+  "connections": {
+    "Alle 6 Stunden": {
+      "main": [
+        [
+          {
+            "node": "Neue Leads aus Supabase laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Neue Leads aus Supabase laden": {
+      "main": [
+        [
+          {
+            "node": "Leads vorhanden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leads vorhanden?": {
+      "main": [
+        [
+          {
+            "node": "Batch E-Mail formatieren",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Keine Leads – nichts tun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Batch E-Mail formatieren": {
+      "main": [
+        [
+          {
+            "node": "Batch Email senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "93072a19-b24e-45cd-b59f-d32015a956fe"
+}

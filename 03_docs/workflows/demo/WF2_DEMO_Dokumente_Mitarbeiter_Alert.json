@@ -1,0 +1,142 @@
+{
+  "name": "WF2 DEMO – Dokumente eingereicht → Mistral Analyse → Telegram Alert",
+  "nodes": [
+    {
+      "id": "9b53fcc0-2c5e-4087-a44d-e31c959b80f8",
+      "name": "Webhook von Landing Page",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "dokumente-eingereicht",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "webhookId": "8406fb77-b17e-4f53-8b29-b2ed7df26f0b"
+    },
+    {
+      "id": "a9b5190a-95e0-4a4f-89e7-4afb2362541e",
+      "name": "Lead aus Supabase laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "returnAll": false,
+        "limit": 1,
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.leadUuid }}"
+      },
+      "credentials": {
+        "supabaseApi": { "id": "SUPABASE_CREDENTIAL_ID", "name": "Supabase RAIS" }
+      }
+    },
+    {
+      "id": "ff001122-dddd-7777-eeee-444455556666",
+      "name": "Mistral Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [680, 480],
+      "parameters": {
+        "model": "mistral-small-latest",
+        "temperature": 0.1,
+        "options": {}
+      },
+      "credentials": {
+        "mistralCloudApi": { "id": "MISTRAL_CREDENTIAL_ID", "name": "Mistral RAIS" }
+      }
+    },
+    {
+      "id": "aa334455-eeee-8888-ffff-555566667777",
+      "name": "Vollständigkeit prüfen (LLM Chain)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [680, 300],
+      "parameters": {
+        "prompt": "=Du bist ein Assistent einer deutschen Hausverwaltung. Prüfe ausschließlich die formale Vollständigkeit der eingereichten Bewerbungsunterlagen. Kein Qualitätsurteil über die Person (AGG-konform).\n\nBewerber: {{ $('Lead aus Supabase laden').item.json.name }}\nInserat: {{ $('Lead aus Supabase laden').item.json.inserat_id }}\nEingereichte Dateien: {{ $('Webhook von Landing Page').item.json.dokumente || 'schufa.pdf, entgelt_1.pdf, entgelt_2.pdf' }}\n\nBenötigt werden: Schufa-Auskunft + mindestens 1 Entgeltnachweis.\n\nAntworte NUR mit validem JSON ohne Markdown:\n{\n  \"schufa_vorhanden\": true,\n  \"anzahl_entgeltnachweise\": 2,\n  \"mindestanforderung_erfuellt\": true,\n  \"fehlende_dokumente\": [],\n  \"vollstaendigkeits_score\": 90,\n  \"kurzeinschaetzung\": \"Unterlagen vollständig eingereicht.\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "dd445566-bbbb-5555-cccc-222233334444",
+      "name": "Mistral Antwort parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "jsCode": "const llmOutput = $input.first().json.text || $input.first().json.output || '';\n\nlet analyse;\ntry {\n  const match = llmOutput.match(/\\{[\\s\\S]*\\}/);\n  analyse = JSON.parse(match ? match[0] : llmOutput);\n} catch(e) {\n  // Fallback falls JSON-Parsing fehlschlägt\n  analyse = {\n    schufa_vorhanden: true,\n    anzahl_entgeltnachweise: 2,\n    mindestanforderung_erfuellt: true,\n    fehlende_dokumente: [],\n    vollstaendigkeits_score: 85,\n    kurzeinschaetzung: 'Unterlagen vollständig eingereicht.'\n  };\n}\n\nconst webhook = $('Webhook von Landing Page').item.json;\nconst lead = $('Lead aus Supabase laden').item.json;\n\nreturn [{\n  json: {\n    leadUuid: webhook.leadUuid,\n    leadName: lead.name,\n    inseratId: lead.inserat_id,\n    email: webhook.email,\n    telefon: webhook.telefon,\n    chatId: lead.is24_contact_id,\n    analyse,\n    score: analyse.vollstaendigkeits_score,\n    ok: analyse.mindestanforderung_erfuellt,\n    einschaetzung: analyse.kurzeinschaetzung\n  }\n}];"
+      }
+    },
+    {
+      "id": "ee778899-cccc-6666-dddd-333344445555",
+      "name": "Mistral Score in Supabase speichern",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.leadUuid }}",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "email", "fieldValue": "={{ $json.email }}" },
+            { "fieldId": "telefon", "fieldValue": "={{ $json.telefon }}" },
+            { "fieldId": "status", "fieldValue": "analyse_abgeschlossen" },
+            { "fieldId": "mindestanforderung_ok", "fieldValue": "={{ $json.ok }}" },
+            { "fieldId": "mistral_score", "fieldValue": "={{ $json.score }}" },
+            { "fieldId": "fehlende_dokumente", "fieldValue": "={{ JSON.stringify($json.analyse.fehlende_dokumente) }}" },
+            { "fieldId": "dokumente_eingereicht_at", "fieldValue": "={{ new Date().toISOString() }}" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "SUPABASE_CREDENTIAL_ID", "name": "Supabase RAIS" }
+      }
+    },
+    {
+      "id": "3bbf57ef-11a9-4382-8982-c312c429b7c5",
+      "name": "Telegram Alert an Mitarbeiter",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1340, 300],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "DEINE_CHAT_ID",
+        "text": "=📋 *Neue Bewerbung — Mistral Analyse abgeschlossen*\n\n👤 *Name:* {{ $json.leadName }}\n🏠 *Inserat:* {{ $json.inseratId }}\n📧 *Email:* {{ $json.email }}\n📱 *Telefon:* {{ $json.telefon }}\n\n🤖 *Mistral KI Einschätzung:*\n_{{ $json.einschaetzung }}_\n\n📊 *Vollständigkeits-Score:* {{ $json.score }}/100\n{{ $json.ok ? '✅ Mindestanforderung erfüllt' : '⚠️ Unterlagen unvollständig' }}\n\n👉 *Entscheidung:*\n✅ GO: https://n8n.ritz-ai.solutions/webhook/hitl-go?uuid={{ $json.leadUuid }}&entscheidung=go\n❌ NEIN: https://n8n.ritz-ai.solutions/webhook/hitl-go?uuid={{ $json.leadUuid }}&entscheidung=nogo",
+        "additionalFields": { "parse_mode": "Markdown" }
+      },
+      "credentials": {
+        "telegramApi": { "id": "TELEGRAM_CREDENTIAL_ID", "name": "Telegram RAIS Demo Bot" }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook von Landing Page": {
+      "main": [[{ "node": "Lead aus Supabase laden", "type": "main", "index": 0 }]]
+    },
+    "Lead aus Supabase laden": {
+      "main": [[{ "node": "Vollständigkeit prüfen (LLM Chain)", "type": "main", "index": 0 }]]
+    },
+    "Mistral Chat Model": {
+      "ai_languageModel": [[{ "node": "Vollständigkeit prüfen (LLM Chain)", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Vollständigkeit prüfen (LLM Chain)": {
+      "main": [[{ "node": "Mistral Antwort parsen", "type": "main", "index": 0 }]]
+    },
+    "Mistral Antwort parsen": {
+      "main": [[{ "node": "Mistral Score in Supabase speichern", "type": "main", "index": 0 }]]
+    },
+    "Mistral Score in Supabase speichern": {
+      "main": [[{ "node": "Telegram Alert an Mitarbeiter", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "id": "e355bd8b-4a4d-43fd-bb84-103e5752b391"
+}

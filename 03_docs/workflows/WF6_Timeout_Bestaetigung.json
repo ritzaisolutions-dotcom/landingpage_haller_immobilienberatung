@@ -1,0 +1,270 @@
+{
+  "name": "WF6 – 30min Slot-Timeout-Check + Lead-Bestätigung Handler",
+  "nodes": [
+    {
+      "id": "6c5a364f-45a1-442b-84a6-dc4369c10b26",
+      "name": "Alle 30 Minuten",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        180
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d73c334a-140f-4ea8-a8a8-bc6751a8f790",
+      "name": "Abgelaufene Reservierungen",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        460,
+        180
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "besichtigungsslots",
+        "returnAll": true,
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "pending"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "6ec67304-34e4-4a29-a1fd-bc120f77258b",
+      "name": "Timeout prüfen + freigeben",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        180
+      ],
+      "parameters": {
+        "jsCode": "const slots = $input.all().map(s => s.json);\nconst now = new Date();\nconst abgelaufen = slots.filter(s => new Date(s.reserviert_bis) < now);\nconst nochAktiv = slots.filter(s => new Date(s.reserviert_bis) >= now);\nreturn abgelaufen.map(s => ({ json: { ...s, aktion: 'freigeben' } }));"
+      }
+    },
+    {
+      "id": "5c7c6e48-b92e-4132-813b-833939176fab",
+      "name": "Slot freigeben in DB",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        900,
+        180
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "besichtigungsslots",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.id }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "slot_status",
+              "fieldValue": "verfuegbar"
+            },
+            {
+              "fieldId": "reserviert_lead_uuid",
+              "fieldValue": ""
+            },
+            {
+              "fieldId": "reserviert_bis",
+              "fieldValue": ""
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "53e12f87-1da5-4db3-986f-925fbdbf59e3",
+      "name": "Lead Bestätigung Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        400
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "termin-bestaetigung",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "d5644ac0-5cb4-4275-9c95-988dcebab95b"
+    },
+    {
+      "id": "fbacd406-4f79-4bb9-adf2-7643e0ba5f2b",
+      "name": "Slot + Lead auf confirmed setzen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        400
+      ],
+      "parameters": {
+        "jsCode": "// Payload von IS24 API (Lead hat mit JA geantwortet)\nconst data = $input.first().json;\nreturn [{\n  json: {\n    leadUuid: data.leadUuid,\n    slotId: data.slotId,\n    bestaetigt: true,\n    bestaetigtAt: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "aaf68fbb-1d4c-422d-bbe9-9e47398b76a8",
+      "name": "Lead Status confirmed",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        680,
+        400
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.leadUuid }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "termin_bestaetigt"
+            },
+            {
+              "fieldId": "termin_bestaetigt_at",
+              "fieldValue": "={{ $json.bestaetigtAt }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "29cc03ef-eb81-46f2-8514-724fae004de2",
+      "name": "Slot Status confirmed",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        900,
+        400
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "besichtigungsslots",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.slotId }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "slot_status",
+              "fieldValue": "confirmed"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Alle 30 Minuten": {
+      "main": [
+        [
+          {
+            "node": "Abgelaufene Reservierungen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Abgelaufene Reservierungen": {
+      "main": [
+        [
+          {
+            "node": "Timeout prüfen + freigeben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Timeout prüfen + freigeben": {
+      "main": [
+        [
+          {
+            "node": "Slot freigeben in DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Bestätigung Webhook": {
+      "main": [
+        [
+          {
+            "node": "Slot + Lead auf confirmed setzen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slot + Lead auf confirmed setzen": {
+      "main": [
+        [
+          {
+            "node": "Lead Status confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Status confirmed": {
+      "main": [
+        [
+          {
+            "node": "Slot Status confirmed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "0d9e8507-c009-4ade-9918-524338109e96"
+}

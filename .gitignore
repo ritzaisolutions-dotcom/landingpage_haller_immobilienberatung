@@ -5,6 +5,7 @@ node_modules/
 .env
 .env.*
 !.env.example
+.supabase-db-password.local
 
 # Build
 .next/
@@ -26,3 +27,6 @@ desktop.ini
 *.log
 npm-debug.log*
 .vercel
+
+
+visuals

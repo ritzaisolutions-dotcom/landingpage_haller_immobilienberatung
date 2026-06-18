@@ -1,0 +1,246 @@
+{
+  "name": "WF5 DEMO – Slot-Check → Terminvorschlag via Telegram",
+  "nodes": [
+    {
+      "id": "ed63d8f0-0764-4ee7-ae7d-547d039fd79a",
+      "name": "Slot-Check Webhook (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "slot-check",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "webhookId": "a997a879-37f1-4537-b9f5-8bc34a9399c3"
+    },
+    {
+      "id": "8359fced-75f6-418f-a491-a5d4438aac77",
+      "name": "Freie Slots aus Supabase laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "besichtigungsslots",
+        "returnAll": false,
+        "limit": 3,
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "frei"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "7eb0a0c1-0eee-4707-a6b3-6112ec2cfaeb",
+      "name": "Freier Slot verfügbar?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "92d7d312-11a0-43b1-a916-90be42d7f4d9",
+              "leftValue": "={{ $input.all().filter(s => s.json.belegt < s.json.kapazitaet).length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "31e0eb3b-91c2-4d05-922e-880dfe08d119",
+      "name": "Slot auswählen + reservieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        900,
+        180
+      ],
+      "parameters": {
+        "jsCode": "const slots = $input.all()\n  .filter(s => s.json.belegt < s.json.kapazitaet)\n  .map(s => s.json);\n\nconst slot = slots[0];\nconst params = $('Slot-Check Webhook (GET)').item.json.query;\n\n// Datum formatieren (datum = date, uhrzeit = time)\nconst datumStr = slot.datum; // z.B. \"2026-06-27\"\nconst uhrzeitStr = slot.uhrzeit.substring(0, 5); // z.B. \"10:00\"\n\nconst datumObj = new Date(datumStr);\nconst wochentage = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];\nconst monate = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];\nconst datumFormatiert = `${wochentage[datumObj.getDay()]}, ${datumObj.getDate()}. ${monate[datumObj.getMonth()]} um ${uhrzeitStr} Uhr`;\n\nconst reserviertBis = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();\n\nreturn [{\n  json: {\n    slotId: slot.id,\n    adresse: slot.adresse,\n    datumFormatiert,\n    leadUuid: params.uuid,\n    leadName: params.name,\n    chatId: params.chatId,\n    reserviertBis,\n    dmText: `Guten Tag ${params.name},\n\nwir würden Ihnen gerne folgenden Besichtigungstermin anbieten:\n\n📅 ${datumFormatiert}\n📍 ${slot.adresse}\n\nDer Platz wird für Sie 24 Stunden reserviert.\n\nBitte antworten Sie mit *JA* um den Termin zu bestätigen, oder *NEIN* wenn Sie verhindert sind.\n\nMit freundlichen Grüßen\nHaller Immobilienberatung GmbH`\n  }\n}];"
+      }
+    },
+    {
+      "id": "c6cc51c7-50b3-41b6-a5c2-370f46009c57",
+      "name": "Slot in Supabase reservieren",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        180
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "besichtigungsslots",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.slotId }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "slot_status",
+              "fieldValue": "reserviert"
+            },
+            {
+              "fieldId": "reserviert_lead_uuid",
+              "fieldValue": "={{ $json.leadUuid }}"
+            },
+            {
+              "fieldId": "reserviert_bis",
+              "fieldValue": "={{ $json.reserviertBis }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "29ac3a52-a92d-487d-88b6-5d945b77d3a0",
+      "name": "Terminvorschlag via Telegram",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1340,
+        180
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $json.chatId }}",
+        "text": "={{ $json.dmText }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram RAIS Demo Bot"
+        }
+      }
+    },
+    {
+      "id": "43447d3a-e79e-4814-91bf-73784b26a0ba",
+      "name": "Kein Slot frei",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        900,
+        440
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Slot-Check Webhook (GET)').item.json.query.chatId }}",
+        "text": "=Guten Tag {{ $('Slot-Check Webhook (GET)').item.json.query.name }},\n\nleider sind aktuell keine Besichtigungstermine verfügbar. Wir melden uns sobald ein neuer Termin frei wird.\n\nMit freundlichen Grüßen\nHaller Immobilienberatung GmbH",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram RAIS Demo Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Slot-Check Webhook (GET)": {
+      "main": [
+        [
+          {
+            "node": "Freie Slots aus Supabase laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Freie Slots aus Supabase laden": {
+      "main": [
+        [
+          {
+            "node": "Freier Slot verfügbar?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Freier Slot verfügbar?": {
+      "main": [
+        [
+          {
+            "node": "Slot auswählen + reservieren",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Kein Slot frei",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slot auswählen + reservieren": {
+      "main": [
+        [
+          {
+            "node": "Slot in Supabase reservieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slot in Supabase reservieren": {
+      "main": [
+        [
+          {
+            "node": "Terminvorschlag via Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "cf906052-d458-40bb-8b1b-e63e1c0e66a3"
+}

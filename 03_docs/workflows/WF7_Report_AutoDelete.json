@@ -1,0 +1,307 @@
+{
+  "name": "WF7 – 24h Besichtigungsreport + 90-Tage Auto-Delete",
+  "nodes": [
+    {
+      "id": "2b030f73-0d5e-4d05-b30b-8d615232c32a",
+      "name": "Stündlich prüfen",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        180
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "ad33cb9b-020d-4d37-b872-65398c16e0fe",
+      "name": "Termine in nächsten 24-25h",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        460,
+        180
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "besichtigungsslots",
+        "returnAll": true,
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "confirmed"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "664c279e-17bb-431b-b691-20b13e156cf0",
+      "name": "Report generieren + Email senden",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        680,
+        180
+      ],
+      "parameters": {
+        "jsCode": "const slots = $input.all().map(s => s.json);\nconst now = new Date();\nconst in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);\nconst in25h = new Date(now.getTime() + 25 * 60 * 60 * 1000);\n\nconst heutigeTermine = slots.filter(s => {\n  const termin = new Date(s.datum_uhrzeit);\n  return termin >= in24h && termin <= in25h;\n});\n\nif (heutigeTermine.length === 0) return [];\n\n// HTML Report bauen\nconst rows = heutigeTermine.map(slot => `\n  <tr>\n    <td style=\"padding:10px;border:1px solid #dee2e6;\">${slot.objekt_adresse}</td>\n    <td style=\"padding:10px;border:1px solid #dee2e6;\">${new Date(slot.datum_uhrzeit).toLocaleString('de-DE', {timeZone:'Europe/Berlin'})}</td>\n    <td style=\"padding:10px;border:1px solid #dee2e6;\">${slot.teilnehmer_namen || 'Daten aus leads-Tabelle laden'}</td>\n    <td style=\"padding:10px;border:1px solid #dee2e6;\">${slot.belegt}/${slot.kapazitaet}</td>\n  </tr>\n`).join('');\n\nreturn [{\n  json: {\n    anzahl: heutigeTermine.length,\n    reportHtml: `<div style=\"font-family:Inter,sans-serif;max-width:700px;\">\n      <h2 style=\"color:#0D1F3C;\">Besichtigungstermine morgen – Report</h2>\n      <table style=\"width:100%;border-collapse:collapse;font-size:13px;\">\n        <thead><tr style=\"background:#0D1F3C;color:white;\">\n          <th style=\"padding:10px;\">Objekt</th>\n          <th style=\"padding:10px;\">Datum/Uhrzeit</th>\n          <th style=\"padding:10px;\">Teilnehmer</th>\n          <th style=\"padding:10px;\">Kapazität</th>\n        </tr></thead>\n        <tbody>${rows}</tbody>\n      </table>\n    </div>`,\n    termine: heutigeTermine\n  }\n}];"
+      }
+    },
+    {
+      "id": "a1396816-7044-4a5a-9128-07195f637858",
+      "name": "Report Email senden",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        900,
+        180
+      ],
+      "parameters": {
+        "fromEmail": "noreply@ritz-ai.solutions",
+        "toEmail": "MITARBEITER_EMAIL@haller-verwaltung.de",
+        "subject": "=📋 Besichtigungsreport – {{ $json.anzahl }} Termine morgen",
+        "emailType": "html",
+        "message": "={{ $json.reportHtml }}",
+        "options": {}
+      },
+      "credentials": {
+        "smtp": {
+          "id": "SMTP_CREDENTIAL_ID",
+          "name": "SMTP RAIS"
+        }
+      }
+    },
+    {
+      "id": "ad0f153b-3076-4ccc-a3b1-5eec201539e8",
+      "name": "Täglich um 03:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        380
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4ce02eb4-b3af-4186-9903-5f1b37670fe1",
+      "name": "Alte Leads laden (90 Tage)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        460,
+        380
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/leads?created_at=lt.{{ new Date(Date.now() - 90*24*60*60*1000).toISOString() }}&select=*",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_ANON_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_ANON_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "779b2df2-fbcf-4c4e-abcb-18899e883483",
+      "name": "Für jeden alten Lead",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        680,
+        380
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "6c6a120a-04e9-4bec-bffe-db76a94e9d32",
+      "name": "Dokumente aus Storage löschen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        380
+      ],
+      "parameters": {
+        "method": "DELETE",
+        "url": "={{ $env.SUPABASE_URL }}/storage/v1/object/dokumente/{{ $json.uuid }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b18c0f8f-4b59-4184-99af-66b120792d74",
+      "name": "Lead Daten anonymisieren",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        380
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.uuid }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "GELÖSCHT"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": ""
+            },
+            {
+              "fieldId": "telefon",
+              "fieldValue": ""
+            },
+            {
+              "fieldId": "nachricht_text",
+              "fieldValue": ""
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "geloescht"
+            },
+            {
+              "fieldId": "geloescht_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Stündlich prüfen": {
+      "main": [
+        [
+          {
+            "node": "Termine in nächsten 24-25h",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Termine in nächsten 24-25h": {
+      "main": [
+        [
+          {
+            "node": "Report generieren + Email senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report generieren + Email senden": {
+      "main": [
+        [
+          {
+            "node": "Report Email senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Täglich um 03:00": {
+      "main": [
+        [
+          {
+            "node": "Alte Leads laden (90 Tage)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alte Leads laden (90 Tage)": {
+      "main": [
+        [
+          {
+            "node": "Für jeden alten Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Für jeden alten Lead": {
+      "main": [
+        [
+          {
+            "node": "Dokumente aus Storage löschen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dokumente aus Storage löschen": {
+      "main": [
+        [
+          {
+            "node": "Lead Daten anonymisieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "d17e89f0-9fed-45ab-a178-704eacfbc82b"
+}

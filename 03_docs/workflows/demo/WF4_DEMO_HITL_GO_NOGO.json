@@ -1,0 +1,288 @@
+{
+  "name": "WF4 DEMO – HITL GO/NO-GO → Telegram an Lead",
+  "nodes": [
+    {
+      "id": "e98677a0-27ad-40b7-9b72-48f307cea1af",
+      "name": "HITL Webhook (GET)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "hitl-go",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson",
+        "options": {}
+      },
+      "webhookId": "2bdc744b-eeed-4067-b8ac-a089e0065e22"
+    },
+    {
+      "id": "3e60ec82-d763-4b73-bdca-32594893d87e",
+      "name": "Lead laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "returnAll": false,
+        "limit": 1,
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.query.uuid }}"
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "a7c6ed1f-fa3e-4df7-876e-01c089931560",
+      "name": "GO oder NO-GO?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "7bd45349-9280-467b-aae6-e8313add3a6e",
+              "leftValue": "={{ $('HITL Webhook (GET)').item.json.query.entscheidung }}",
+              "rightValue": "go",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "ff71c2f7-5096-4a8d-bfd7-bf68d86b1193",
+      "name": "Status qualifiziert",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        900,
+        160
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $('HITL Webhook (GET)').item.json.query.uuid }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "qualifiziert"
+            },
+            {
+              "fieldId": "entscheidung_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "21bb0c02-885b-47cf-be04-d5aedbe99b9c",
+      "name": "GO Telegram an Lead",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        160
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Lead laden').item.json.is24_contact_id }}",
+        "text": "=Guten Tag {{ $('Lead laden').item.json.name }},\n\nwir haben Ihre Unterlagen geprüft und freuen uns, Ihnen einen Besichtigungstermin anbieten zu können.\n\nSie erhalten in Kürze eine weitere Nachricht mit einem konkreten Terminvorschlag.\n\nMit freundlichen Grüßen\nHaller Immobilienberatung GmbH",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram RAIS Demo Bot"
+        }
+      }
+    },
+    {
+      "id": "9bb3d91a-047a-4532-b6eb-5eaee29f1879",
+      "name": "WF5 Slot-Check triggern",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1340,
+        160
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "=https://n8n.ritz-ai.solutions/webhook/slot-check?uuid={{ $('HITL Webhook (GET)').item.json.query.uuid }}&inseratId={{ $('Lead laden').item.json.inserat_id }}&name={{ $('Lead laden').item.json.name }}&chatId={{ $('Lead laden').item.json.is24_contact_id }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "97f16ece-82a1-46a9-b315-d8d611d9d8c8",
+      "name": "Status abgelehnt",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        900,
+        440
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $('HITL Webhook (GET)').item.json.query.uuid }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "abgelehnt"
+            },
+            {
+              "fieldId": "entscheidung_at",
+              "fieldValue": "={{ new Date().toISOString() }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "4c3794a0-8d2b-4d99-a83c-8b69933c3616",
+      "name": "NO-GO Telegram an Lead",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1120,
+        440
+      ],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('Lead laden').item.json.is24_contact_id }}",
+        "text": "=Guten Tag {{ $('Lead laden').item.json.name }},\n\nvielen Dank für Ihre Bewerbung und Ihr Interesse an unserer Wohnung.\n\nNach Prüfung Ihrer Unterlagen müssen wir Ihnen leider mitteilen, dass wir uns für eine andere Bewerbung entschieden haben.\n\nIhre Unterlagen werden nach 90 Tagen automatisch gelöscht.\n\nMit freundlichen Grüßen\nHaller Immobilienberatung GmbH",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram RAIS Demo Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "HITL Webhook (GET)": {
+      "main": [
+        [
+          {
+            "node": "Lead laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead laden": {
+      "main": [
+        [
+          {
+            "node": "GO oder NO-GO?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GO oder NO-GO?": {
+      "main": [
+        [
+          {
+            "node": "Status qualifiziert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Status abgelehnt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status qualifiziert": {
+      "main": [
+        [
+          {
+            "node": "GO Telegram an Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GO Telegram an Lead": {
+      "main": [
+        [
+          {
+            "node": "WF5 Slot-Check triggern",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Status abgelehnt": {
+      "main": [
+        [
+          {
+            "node": "NO-GO Telegram an Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "d1b7599e-bfe3-4fc5-8e08-f914b4dbd567"
+}

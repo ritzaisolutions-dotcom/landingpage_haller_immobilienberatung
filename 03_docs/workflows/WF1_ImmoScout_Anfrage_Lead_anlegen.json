@@ -1,0 +1,206 @@
+{
+  "name": "WF1 – ImmoScout Anfrage → Lead anlegen → DM mit Link",
+  "nodes": [
+    {
+      "id": "f6469e06-42b3-4e71-b961-77136916d26b",
+      "name": "ImmoScout Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "immoscout-anfrage",
+        "responseMode": "onReceived",
+        "responseData": "firstEntryJson",
+        "options": {
+          "rawBody": false
+        }
+      },
+      "webhookId": "f5ef349f-9e77-46b1-af34-cd845f10f375"
+    },
+    {
+      "id": "9861fd75-aa18-447e-bc5b-afa7646db6bc",
+      "name": "Daten extrahieren + UUID generieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// ImmoScout API response parsing\n// Passe die Feldnamen an das echte IS24 API Response Format an\nconst body = $input.first().json;\n\n// IS24 API liefert Kontaktanfrage-Objekte\nconst anfrage = body.contactDetails || body;\n\nconst name = anfrage.lastName \n  ? `${anfrage.firstName || ''} ${anfrage.lastName}`.trim()\n  : anfrage.name || 'Unbekannt';\n\nconst inseratId = anfrage.realEstateId || anfrage.exposeId || body.realEstateId || 'UNBEKANNT';\nconst messageText = anfrage.message || anfrage.userNote || '';\nconst anfragenDatum = new Date().toISOString();\n\n// UUID für diesen Lead generieren\nconst crypto = require('crypto');\nconst leadUuid = crypto.randomUUID();\n\n// Unique Landing Page Link\nconst landingPageUrl = `https://qualify.haller-verwaltung.de/upload?t=${leadUuid}`;\n\n// Kurze Prüfung: Hat der Lead schon Liquiditätsnachweis erwähnt?\nconst liquiditaetErwaehnt = /gehalt|einkommen|schufa|netto|verdien/i.test(messageText);\n\nreturn [{\n  json: {\n    name,\n    inseratId,\n    messageText,\n    anfragenDatum,\n    leadUuid,\n    landingPageUrl,\n    liquiditaetErwaehnt,\n    // IS24 interne Kontakt-ID für Reply\n    is24ContactId: anfrage.id || anfrage.contactId || null,\n    is24UserId: anfrage.senderId || null\n  }\n}];"
+      }
+    },
+    {
+      "id": "4399264c-5a56-4270-a776-bac8e9bb4e2d",
+      "name": "Lead in Supabase anlegen",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ],
+      "parameters": {
+        "operation": "create",
+        "tableId": "leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "uuid",
+              "fieldValue": "={{ $json.leadUuid }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "inserat_id",
+              "fieldValue": "={{ $json.inseratId }}"
+            },
+            {
+              "fieldId": "nachricht_text",
+              "fieldValue": "={{ $json.messageText }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "neu"
+            },
+            {
+              "fieldId": "liquiditaet_erwaehnt",
+              "fieldValue": "={{ $json.liquiditaetErwaehnt }}"
+            },
+            {
+              "fieldId": "is24_contact_id",
+              "fieldValue": "={{ $json.is24ContactId }}"
+            },
+            {
+              "fieldId": "landing_page_url",
+              "fieldValue": "={{ $json.landingPageUrl }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $json.anfragenDatum }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "a35a7a83-01d5-4f98-8292-39c5027d09f6",
+      "name": "DM via IS24 API senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://rest.immobilienscout24.de/restapi/api/offer/v1.0/user/{{ $json.is24UserId }}/realestate/{{ $json.inseratId }}/contact/{{ $json.is24ContactId }}/message",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth1Api",
+        "sendBody": true,
+        "bodyContentType": "json",
+        "jsonBody": "={\n  \"message\": \"Guten Tag {{ $json.name }},\\n\\nvielen Dank für Ihre Anfrage zur Wohnung (Inserat {{ $json.inseratId }}).\\n\\nUm Ihre Bewerbung zu bearbeiten, bitten wir Sie, Ihre Unterlagen über folgenden Link einzureichen:\\n\\n{{ $json.landingPageUrl }}\\n\\nBitte laden Sie dort hoch:\\n- Aktuelle Schufa-Auskunft\\n- Einkommensnachweise (letzte 3 Monate)\\n\\nIhre Daten werden verschlüsselt gespeichert und nach 90 Tagen automatisch gelöscht.\\n\\nMit freundlichen Grüßen\\nImmobilienverwaltung Haller\"\n}",
+        "options": {}
+      },
+      "credentials": {
+        "oAuth1Api": {
+          "id": "IS24_OAUTH_CREDENTIAL_ID",
+          "name": "ImmoScout24 OAuth"
+        }
+      }
+    },
+    {
+      "id": "832cbc94-f12b-462b-8566-8c69acc3cf35",
+      "name": "Status auf DM gesendet setzen",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        300
+      ],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $('Daten extrahieren + UUID generieren').item.json.leadUuid }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "dm_gesendet"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "ImmoScout Webhook": {
+      "main": [
+        [
+          {
+            "node": "Daten extrahieren + UUID generieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daten extrahieren + UUID generieren": {
+      "main": [
+        [
+          {
+            "node": "Lead in Supabase anlegen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead in Supabase anlegen": {
+      "main": [
+        [
+          {
+            "node": "DM via IS24 API senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DM via IS24 API senden": {
+      "main": [
+        [
+          {
+            "node": "Status auf DM gesendet setzen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "id": "7f4a3883-1c32-4abb-a4e1-45e1a71dcc65"
+}
