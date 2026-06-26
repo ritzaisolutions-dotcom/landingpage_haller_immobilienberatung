@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --dash-bg: #07101e;
+  --dash-card: #0d1f3c;
+  --dash-card-alt: #091528;
+  --dash-border: #1a3a6a;
+  --dash-border-subtle: #0f2544;
+  --dash-accent: #3b82f6;
+  --dash-accent-hover: #2563eb;
+  --dash-success: #22c55e;
+  --dash-warning: #f59e0b;
+  --dash-danger: #ef4444;
+  --dash-text: #e2eaf8;
+  --dash-muted: #4a6080;
+  --dash-disabled: #2a3a55;
+  --haller-teal: #00afcb;
+}
+
+body {
+  background-color: var(--dash-bg);
+  color: var(--dash-text);
+}
+
+@layer components {
+  .dash-card {
+    @apply rounded-xl border border-dash-border bg-dash-card shadow-[0_4px_24px_rgba(0,0,0,0.3)];
+  }
+
+  .dash-input {
+    @apply w-full rounded-lg border border-dash-border bg-dash-card px-3 py-2 text-sm text-dash-text outline-none focus:border-dash-accent;
+  }
+
+  .dash-btn-primary {
+    @apply rounded-lg bg-dash-accent px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-dash-accent-hover disabled:opacity-50;
+  }
+
+  .dash-btn-ghost {
+    @apply rounded-lg border border-dash-border px-4 py-2 text-sm text-dash-muted transition-colors hover:border-dash-accent hover:text-dash-text;
+  }
+
+  .dash-btn-danger {
+    @apply rounded-lg border border-dash-danger/40 px-4 py-2 text-sm text-dash-danger transition-colors hover:bg-dash-danger/10;
+  }
+
+  .dash-btn-success {
+    @apply rounded-lg border border-dash-success/40 px-4 py-2 text-sm text-dash-success transition-colors hover:bg-dash-success/10;
+  }
+}
