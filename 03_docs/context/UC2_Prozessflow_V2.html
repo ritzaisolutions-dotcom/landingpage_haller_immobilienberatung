@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>UC2 V2 — Prozessflow Haller Immobilienberatung</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#07101E; font-family:'Inter',sans-serif; min-height:100vh; padding:40px 32px 60px; color:#E2EAF8; }
+.page { max-width:880px; margin:0 auto; }
+
+.hdr { text-align:center; margin-bottom:44px; padding-bottom:28px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.hdr-tag { font-size:10px; font-weight:700; letter-spacing:3px; color:#3B82F6; text-transform:uppercase; margin-bottom:8px; }
+.hdr-title { font-size:28px; font-weight:900; color:#fff; letter-spacing:-0.5px; margin-bottom:6px; }
+.hdr-sub { font-size:12px; color:#3A5070; }
+.hdr-pills { display:flex; justify-content:center; gap:10px; margin-top:14px; flex-wrap:wrap; }
+.pill { display:flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:10px; font-weight:600; border:1px solid; }
+
+.sys-hdr { display:flex; align-items:center; gap:12px; margin-bottom:20px; margin-top:8px; }
+.sys-hdr-line { flex:1; height:1px; }
+.sys-hdr-label { font-size:10px; font-weight:800; letter-spacing:2px; text-transform:uppercase; white-space:nowrap; padding:4px 14px; border-radius:20px; }
+
+.step { display:flex; gap:0; border-radius:16px; overflow:hidden; position:relative; margin-bottom:0; }
+.step-icon-col { width:88px; flex-shrink:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; padding:20px 10px; }
+.step-icon-wrap { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; }
+.step-icon-wrap svg { width:28px; height:28px; }
+.tech-name { font-size:8px; font-weight:700; letter-spacing:0.5px; text-align:center; line-height:1.3; text-transform:uppercase; }
+.step-content { flex:1; padding:18px 20px; border-left:1px solid; }
+.step-num-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.step-num { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; flex-shrink:0; }
+.step-title { font-size:14px; font-weight:700; color:#fff; }
+.step-items { display:flex; flex-direction:column; gap:4px; margin-top:6px; }
+.si { display:flex; align-items:flex-start; gap:6px; font-size:11px; color:#7A9ABE; line-height:1.45; }
+.si::before { content:'›'; font-weight:700; margin-top:1px; flex-shrink:0; }
+.badge-inline { display:inline-block; padding:1px 7px; border-radius:4px; font-size:9px; font-weight:700; letter-spacing:0.3px; vertical-align:middle; }
+
+.arr-wrap { display:flex; align-items:center; padding:0 0 0 44px; margin:2px 0; }
+.arr-inner { display:flex; flex-direction:column; align-items:center; gap:0; }
+.arr-shaft { width:2px; height:24px; border-radius:1px; }
+.arr-head { width:0; height:0; border-left:5px solid transparent; border-right:5px solid transparent; }
+.arr-label { font-size:9px; font-weight:600; color:#2A3E58; margin-left:8px; letter-spacing:0.3px; }
+.arr-dotted .arr-shaft { background:repeating-linear-gradient(180deg,#2A4060 0px,#2A4060 4px,transparent 4px,transparent 8px) !important; }
+
+.branch-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; position:relative; margin:2px 0; }
+
+.decision { margin:2px 0; display:flex; flex-direction:column; align-items:center; }
+.diamond-wrap { width:100%; display:flex; justify-content:center; position:relative; padding:8px 0; }
+.diamond { width:56px; height:56px; transform:rotate(45deg); border-radius:8px; display:flex; align-items:center; justify-content:center; border:2px solid; }
+.diamond-label { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); font-size:9px; font-weight:800; text-align:center; pointer-events:none; z-index:2; white-space:nowrap; }
+
+.lp-card { border-radius:16px; overflow:hidden; margin-bottom:0; }
+.lp-top { padding:12px 20px 10px; display:flex; align-items:center; gap:12px; }
+.lp-badge { font-size:9px; font-weight:800; padding:2px 10px; border-radius:20px; letter-spacing:1px; text-transform:uppercase; }
+.lp-title { font-size:13px; font-weight:700; color:#fff; }
+.lp-body { padding:12px 20px 16px; }
+.lp-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.lp-field { display:flex; flex-direction:column; gap:3px; }
+.lp-field-label { font-size:9px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; }
+.lp-field-box { border-radius:6px; padding:7px 10px; font-size:10px; border:1px solid; }
+.lp-dsgvo { margin-top:10px; padding:8px 10px; border-radius:8px; font-size:10px; line-height:1.5; display:flex; align-items:flex-start; gap:8px; }
+.dsgvo-checkbox { width:14px; height:14px; border-radius:3px; border:1.5px solid #FBBF24; background:rgba(251,191,36,0.1); flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center; }
+
+.dash-card { border-radius:16px; overflow:hidden; }
+.dash-top { padding:12px 20px; display:flex; align-items:center; gap:10px; }
+.dash-body { padding:0 16px 16px; display:flex; flex-direction:column; gap:8px; }
+.dash-row { border-radius:10px; padding:10px 14px; border:1px solid; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.dash-name { font-size:12px; font-weight:600; color:#C8D8F0; }
+.dash-meta { font-size:10px; color:#3A5070; }
+.dash-score { font-size:14px; font-weight:800; }
+.dash-btns { display:flex; gap:6px; }
+.dash-btn { padding:5px 12px; border-radius:7px; font-size:9px; font-weight:700; letter-spacing:0.3px; border:none; cursor:pointer; }
+
+.compare-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:0; }
+.compare-card { border-radius:12px; padding:14px; border:1px solid; }
+.compare-name { font-size:11px; font-weight:700; color:#C8D8F0; margin-bottom:8px; }
+.score-circle { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:900; margin:0 auto 8px; border:2px solid; }
+.compare-row { display:flex; justify-content:space-between; font-size:9px; margin-bottom:3px; }
+.compare-key { color:#3A5070; }
+.compare-val { font-weight:600; }
+.compare-reason { font-size:9px; color:#3A5070; line-height:1.4; margin-top:8px; font-style:italic; }
+.fav-btn { width:100%; margin-top:8px; padding:6px; border-radius:7px; font-size:9px; font-weight:700; border:1px solid; text-align:center; }
+
+.delete-card { border-radius:14px; padding:16px 20px; display:flex; align-items:center; gap:16px; border:1px dashed; margin-top:2px; }
+.delete-num { font-size:28px; font-weight:900; }
+.delete-unit { font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+
+.dsgvo-note { margin-top:10px; padding:8px 12px; border-radius:8px; background:rgba(251,191,36,0.05); border:1px solid rgba(251,191,36,0.18); font-size:10px; color:#A08010; line-height:1.5; }
+.agg-note { margin-top:8px; padding:6px 10px; border-radius:6px; background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.18); font-size:10px; color:#A05050; }
+
+.legend { margin-top:36px; padding-top:20px; border-top:1px solid rgba(255,255,255,0.05); display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; }
+.leg-item { display:flex; align-items:center; gap:8px; font-size:10px; color:#3A5070; font-weight:500; }
+.leg-icon { width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-tag">RAIS × Immobilienberatung Haller · Andernach · UC2 V2</div>
+  <div class="hdr-title">Lead-Qualifizierung & Terminmanagement — Systemarchitektur</div>
+  <div class="hdr-sub">Revidierter Flow · Keine Uploadbarriere vor Besichtigung · Selbstauskunft post-Besichtigung</div>
+  <div class="hdr-pills">
+    <span class="pill" style="border-color:#1E3A6E;color:#60A5FA;background:rgba(59,130,246,0.06);">ImmoScout24 API</span>
+    <span class="pill" style="border-color:#0E3A3A;color:#2DD4BF;background:rgba(45,212,191,0.06);">Supabase Frankfurt EU</span>
+    <span class="pill" style="border-color:#2D1B5E;color:#A78BFA;background:rgba(139,92,246,0.06);">Mistral AI Paris EU</span>
+    <span class="pill" style="border-color:#1E3A28;color:#34D399;background:rgba(52,211,153,0.06);">n8n Hetzner DE</span>
+    <span class="pill" style="border-color:#3A2A00;color:#FBBF24;background:rgba(251,191,36,0.06);">DSGVO-konform · 30-Tage-Delete</span>
+  </div>
+</div>
+
+<!-- ═══ PHASE 0 ═══ -->
+<div class="sys-hdr">
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,transparent,#1E3A6E);"></div>
+  <div class="sys-hdr-label" style="background:#0D1F3C;color:#60A5FA;border:1px solid #1E3A6E;">Phase 0 — Erstkontakt</div>
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,#1E3A6E,transparent);"></div>
+</div>
+
+<!-- STEP 1 -->
+<div class="step" style="background:linear-gradient(135deg,#081828,#050F1E);border:1px solid #1E3A6E;">
+  <div class="step-icon-col" style="background:rgba(30,58,110,0.3);">
+    <div class="step-icon-wrap" style="background:#00AF41;">
+      <svg viewBox="0 0 28 28" fill="none"><path d="M14 3L3 12h3v10h6v-5h4v5h6V12h3L14 3z" fill="white" opacity="0.9"/></svg>
+    </div>
+    <div class="tech-name" style="color:#00AF41;">IS24<br>DM</div>
+  </div>
+  <div class="step-content" style="border-color:#1E3A6E;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#1E3A6E;color:#60A5FA;">1</div>
+      <div class="step-title">Eingehende Anfrage — ImmoScout24 / Telegram (Demo)</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Lead schreibt DM auf ImmoScout24 zu einem Inserat (Miet- oder Kaufobjekt)</div>
+      <div class="si">n8n WF1: Telegram Trigger (Demo) oder IS24 Webhook (Produktion, nach API-Genehmigung)</div>
+      <div class="si">Rate Limiter: max. 1 Anfrage pro ChatID / 60 Sekunden</div>
+      <div class="si">UUID + lp1_token generieren → Lead in Supabase anlegen (status: <span class="badge-inline" style="background:#1E3A6E;color:#60A5FA;">'neu'</span>)</div>
+    </div>
+  </div>
+</div>
+
+<div class="arr-wrap">
+  <div class="arr-inner"><div class="arr-shaft" style="background:#1E3A6E;"></div><div class="arr-head" style="border-top:8px solid #1E3A6E;"></div></div>
+  <span class="arr-label">Mistral Intent-Check</span>
+</div>
+
+<!-- STEP 2 — DECISION: GENUG INFO? -->
+<div class="step" style="background:linear-gradient(135deg,#0E0A28,#080618);border:1px solid #2D1B5E;">
+  <div class="step-icon-col" style="background:rgba(45,27,94,0.3);">
+    <div class="step-icon-wrap" style="background:linear-gradient(135deg,#FF7000,#CC4400);">
+      <svg viewBox="0 0 28 28" fill="white"><rect x="1" y="1" width="5" height="5" rx="0.5"/><rect x="7" y="1" width="5" height="5" rx="0.5" opacity="0.8"/><rect x="1" y="7" width="5" height="5" rx="0.5" opacity="0.8"/><rect x="7" y="7" width="5" height="5" rx="0.5"/><rect x="15" y="1" width="5" height="5" rx="0.5" opacity="0.6"/></svg>
+    </div>
+    <div class="tech-name" style="color:#C084FC;">Mistral<br>Intent</div>
+  </div>
+  <div class="step-content" style="border-color:#2D1B5E;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#2D1B5E;color:#C084FC;">2</div>
+      <div class="step-title">Mistral Intent-Check — Sind genug Informationen vorhanden?</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Mistral prüft: Enthält die Nachricht Name, Telefon, Angaben zu Arbeitsverhältnis oder Einkommen?</div>
+      <div class="si"><span class="badge-inline" style="background:#2D1B5E;color:#C084FC;">mistral-small-latest</span> + Fallback <span class="badge-inline" style="background:#1A0F30;color:#9060C0;">open-mistral-7b</span></div>
+      <div class="si">Output: intention, dringlichkeit, info_ausreichend (true/false), kurznotiz → alles in Supabase geloggt</div>
+    </div>
+  </div>
+</div>
+
+<!-- BRANCH: INFO AUSREICHEND? -->
+<div style="display:flex;justify-content:center;padding:0 44px;margin:4px 0;">
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <div style="width:2px;height:16px;background:#2D1B5E;"></div>
+    <div class="diamond-wrap" style="padding:4px 0;">
+      <div class="diamond" style="background:rgba(45,27,94,0.4);border-color:#5B21B6;"></div>
+      <span class="diamond-label" style="color:#C084FC;font-size:8px;">Info<br>ausreichend?</span>
+    </div>
+  </div>
+</div>
+
+<div class="branch-row" style="margin-bottom:4px;">
+  <!-- NEIN Branch -->
+  <div class="step" style="background:linear-gradient(135deg,#1A0A0A,#120606);border:1px solid #5D1A1A;opacity:0.75;">
+    <div class="step-icon-col" style="background:rgba(93,26,26,0.3);">
+      <div class="step-icon-wrap" style="background:#B91C1C;">
+        <svg viewBox="0 0 28 28" fill="none" stroke="white" stroke-width="2"><circle cx="14" cy="14" r="10"/><path d="M10 14h8M10 10l4 4-4 4"/></svg>
+      </div>
+      <div class="tech-name" style="color:#F87171;">Rückfrage</div>
+    </div>
+    <div class="step-content" style="border-color:#5D1A1A;">
+      <div class="step-num-row">
+        <div class="step-num" style="background:#5D1A1A;color:#F87171;">↩</div>
+        <div class="step-title" style="color:#F87171;">Info unvollständig → Rückfrage</div>
+      </div>
+      <div class="step-items">
+        <div class="si">Automatische DM: "Für welches Inserat interessieren Sie sich? Bitte nennen Sie uns Ihren Namen und eine Telefonnummer."</div>
+        <div class="si">Lead-Status bleibt <span class="badge-inline" style="background:#5D1A1A;color:#F87171;">'neu'</span> bis Rückfrage beantwortet</div>
+      </div>
+    </div>
+  </div>
+  <!-- JA Branch -->
+  <div class="step" style="background:linear-gradient(135deg,#081828,#050F1E);border:1px solid #1E3A6E;">
+    <div class="step-icon-col" style="background:rgba(30,58,110,0.3);">
+      <div class="step-icon-wrap" style="background:#1C1C1C;">
+        <svg viewBox="0 0 28 28" fill="none"><ellipse cx="14" cy="7" rx="10" ry="3.5" fill="#3ECF8E"/><path d="M4 7v7c0 1.93 4.48 3.5 10 3.5s10-1.57 10-3.5V7" fill="none" stroke="#3ECF8E" stroke-width="1.5"/><path d="M4 14v7c0 1.93 4.48 3.5 10 3.5s10-1.57 10-3.5v-7" fill="none" stroke="#3ECF8E" stroke-width="1.5" opacity="0.7"/></svg>
+      </div>
+      <div class="tech-name" style="color:#3ECF8E;">Supabase<br>Lead-DB</div>
+    </div>
+    <div class="step-content" style="border-color:#1E3A6E;">
+      <div class="step-num-row">
+        <div class="step-num" style="background:#1E3A6E;color:#60A5FA;">3</div>
+        <div class="step-title">Lead angelegt — LP1-Link senden</div>
+      </div>
+      <div class="step-items">
+        <div class="si">Supabase: Lead mit lp1_token, Name, Telefon, Inserat-ID, Intent-Notiz gespeichert</div>
+        <div class="si">DM: "Guten Tag [Name], buchen Sie hier Ihren Besichtigungstermin: [LP1-Link]"</div>
+        <div class="si">Token gültig für <span class="badge-inline" style="background:#1E3A6E;color:#60A5FA;">72 Stunden</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PHASE 1 ═══ -->
+<div style="height:16px;"></div>
+<div class="sys-hdr">
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,transparent,#1E4A6E);"></div>
+  <div class="sys-hdr-label" style="background:#081C30;color:#38BDF8;border:1px solid #1E4A6E;">Phase 1 — Terminbuchung (LP1)</div>
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,#1E4A6E,transparent);"></div>
+</div>
+
+<!-- LP1 CARD -->
+<div class="lp-card" style="background:linear-gradient(135deg,#081828,#040E1C);border:1px solid #1E4A6E;">
+  <div class="lp-top" style="background:rgba(30,74,110,0.2);border-bottom:1px solid #1E4A6E;">
+    <div style="width:36px;height:36px;border-radius:10px;background:#000;border:1px solid #333;display:flex;align-items:center;justify-content:center;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00AFCB" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <div>
+      <div class="lp-badge" style="background:rgba(0,175,203,0.12);color:#00AFCB;border:1px solid rgba(0,175,203,0.3);margin-bottom:3px;">Landing Page 1 · Terminbuchung</div>
+      <div class="lp-title">Besichtigungstermin buchen — landingpage-haller.vercel.app/termin?t={token}</div>
+    </div>
+  </div>
+  <div class="lp-body">
+    <div style="font-size:10px;color:#3A5070;margin-bottom:10px;">Haller Corporate Design · #00AFCB · Nunito · Mobil-optimiert</div>
+    <div class="lp-fields">
+      <div class="lp-field">
+        <div class="lp-field-label" style="color:#3A6070;">Name</div>
+        <div class="lp-field-box" style="background:rgba(0,175,203,0.05);border-color:#1E4A6E;color:#7A9ABE;">Max Mustermann</div>
+      </div>
+      <div class="lp-field">
+        <div class="lp-field-label" style="color:#3A6070;">Telefon</div>
+        <div class="lp-field-box" style="background:rgba(0,175,203,0.05);border-color:#1E4A6E;color:#7A9ABE;">+49 151 ...</div>
+      </div>
+      <div class="lp-field">
+        <div class="lp-field-label" style="color:#3A6070;">E-Mail</div>
+        <div class="lp-field-box" style="background:rgba(0,175,203,0.05);border-color:#1E4A6E;color:#7A9ABE;">max@example.de</div>
+      </div>
+      <div class="lp-field">
+        <div class="lp-field-label" style="color:#3A6070;">Slot-Auswahl</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:2px;">
+          <div style="padding:4px 10px;border-radius:20px;background:#00AFCB;color:#fff;font-size:9px;font-weight:700;">Fr. 27.6 · 10:00</div>
+          <div style="padding:4px 10px;border-radius:20px;background:rgba(0,175,203,0.1);border:1px solid rgba(0,175,203,0.3);color:#00AFCB;font-size:9px;font-weight:600;">Fr. 27.6 · 14:00</div>
+          <div style="padding:4px 10px;border-radius:20px;background:rgba(0,175,203,0.1);border:1px solid rgba(0,175,203,0.3);color:#00AFCB;font-size:9px;font-weight:600;">Sa. 28.6 · 11:00</div>
+        </div>
+      </div>
+    </div>
+    <div class="lp-dsgvo" style="background:rgba(251,191,36,0.04);border:1px solid rgba(251,191,36,0.15);">
+      <div class="dsgvo-checkbox"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polyline points="2,5 4,7 8,3" stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <span style="color:#8A7020;font-size:10px;">Ich stimme der Verarbeitung meiner Daten durch Haller Immobilienberatung GmbH gemäß <u>Datenschutzerklärung</u> zu. Meine Daten werden nach Abschluss des Prozesses automatisch gelöscht.</span>
+    </div>
+  </div>
+</div>
+
+<div class="arr-wrap">
+  <div class="arr-inner"><div class="arr-shaft" style="background:#1E4A6E;"></div><div class="arr-head" style="border-top:8px solid #1E4A6E;"></div></div>
+  <span class="arr-label">Formular abgesendet · n8n WF2</span>
+</div>
+
+<!-- STEP 4 -->
+<div class="step" style="background:linear-gradient(135deg,#081828,#050F1E);border:1px solid #1E4A6E;">
+  <div class="step-icon-col" style="background:rgba(30,74,110,0.3);">
+    <div class="step-icon-wrap" style="background:#0078D4;">
+      <svg viewBox="0 0 28 28" fill="none"><rect x="3" y="5" width="22" height="18" rx="2" fill="white" opacity="0.15" stroke="white" stroke-width="1.5"/><circle cx="10" cy="13" r="3" fill="white"/><rect x="15" y="10" width="6" height="1.5" rx="0.75" fill="white"/><rect x="15" y="13" width="6" height="1.5" rx="0.75" fill="white" opacity="0.7"/><rect x="15" y="16" width="4" height="1.5" rx="0.75" fill="white" opacity="0.5"/></svg>
+    </div>
+    <div class="tech-name" style="color:#38BDF8;">Outlook<br>Kalender</div>
+  </div>
+  <div class="step-content" style="border-color:#1E4A6E;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#1E4A6E;color:#38BDF8;">4</div>
+      <div class="step-title">Slot reservieren + Outlook Kalender-Event erstellen</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Supabase: Slot <span class="badge-inline" style="background:#1E4A6E;color:#38BDF8;">belegt+1</span> · slot_status = 'reserviert' · Lead-UUID verknüpft</div>
+      <div class="si">Lead-Status → <span class="badge-inline" style="background:#1E4A6E;color:#38BDF8;">'termin_gebucht'</span> · termin_gebucht_at = now()</div>
+      <div class="si">Microsoft Graph API: Kalender-Event für zuständigen Mitarbeiter (Datum, Uhrzeit, Adresse, Name, Tel., Email)</div>
+      <div class="si">Bestätigungs-DM an Lead: "Ihr Termin am [Datum] um [Uhrzeit] ist bestätigt."</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PHASE 2 ═══ -->
+<div style="height:16px;"></div>
+<div class="sys-hdr">
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,transparent,#3A2A5E);"></div>
+  <div class="sys-hdr-label" style="background:#1A1030;color:#A78BFA;border:1px solid #3A2A5E;">Phase 2 — Post-Besichtigung (Dashboard)</div>
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,#3A2A5E,transparent);"></div>
+</div>
+
+<!-- DASHBOARD CARD -->
+<div class="dash-card" style="background:linear-gradient(135deg,#0D0820,#080515);border:1px solid #3A2A5E;">
+  <div class="dash-top" style="background:rgba(58,42,94,0.3);border-bottom:1px solid #3A2A5E;">
+    <div style="width:36px;height:36px;border-radius:10px;background:#3A2A5E;display:flex;align-items:center;justify-content:center;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+    </div>
+    <div>
+      <div class="lp-badge" style="background:rgba(139,92,246,0.12);color:#A78BFA;border:1px solid rgba(139,92,246,0.3);margin-bottom:3px;">Dashboard · Tab "Besichtigungen"</div>
+      <div class="lp-title">Mitarbeiter entscheidet nach Besichtigung</div>
+    </div>
+  </div>
+  <div class="dash-body" style="padding-top:12px;">
+    <div class="dash-row" style="background:rgba(58,42,94,0.2);border-color:#3A2A5E;">
+      <div>
+        <div class="dash-name">Max Mustermann</div>
+        <div class="dash-meta">Mainzer Str. 12 · Fr. 27.6 · 10:00 Uhr · 30 Min · ✅ Stattgefunden</div>
+      </div>
+      <div class="dash-btns">
+        <div class="dash-btn" style="background:#0F2818;color:#34D399;border:1px solid #0F3818;">✅ Selbstauskunft anfordern</div>
+        <div class="dash-btn" style="background:#2A0808;color:#F87171;border:1px solid #3D1010;">❌ Absagen</div>
+      </div>
+    </div>
+    <div class="dash-row" style="background:rgba(58,42,94,0.1);border-color:#2A1A4E;opacity:0.6;">
+      <div>
+        <div class="dash-name">Anna Schmidt</div>
+        <div class="dash-meta">Mainzer Str. 12 · Fr. 27.6 · 10:00 Uhr · 30 Min · ✅ Stattgefunden</div>
+      </div>
+      <div class="dash-btns">
+        <div class="dash-btn" style="background:#0F2818;color:#34D399;border:1px solid #0F3818;">✅ Selbstauskunft anfordern</div>
+        <div class="dash-btn" style="background:#2A0808;color:#F87171;border:1px solid #3D1010;">❌ Absagen</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BRANCH: Weiterführen oder Absagen? -->
+<div style="display:flex;justify-content:center;padding:0 44px;margin:4px 0;">
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <div style="width:2px;height:16px;background:#3A2A5E;"></div>
+    <div class="diamond-wrap" style="padding:4px 0;">
+      <div class="diamond" style="background:rgba(58,42,94,0.5);border-color:#7C3AED;"></div>
+      <span class="diamond-label" style="color:#C084FC;font-size:8px;">Mitarbeiter<br>Entscheidung</span>
+    </div>
+  </div>
+</div>
+
+<div class="branch-row" style="margin-bottom:4px;">
+  <!-- ABSAGEN -->
+  <div class="step" style="background:linear-gradient(135deg,#1A0A0A,#120606);border:1px solid #5D1A1A;opacity:0.75;">
+    <div class="step-icon-col" style="background:rgba(93,26,26,0.3);">
+      <div class="step-icon-wrap" style="background:#B91C1C;">
+        <svg viewBox="0 0 28 28" fill="none" stroke="white" stroke-width="2.5"><line x1="6" y1="6" x2="22" y2="22"/><line x1="22" y1="6" x2="6" y2="22"/></svg>
+      </div>
+      <div class="tech-name" style="color:#F87171;">Sofort-<br>Absage</div>
+    </div>
+    <div class="step-content" style="border-color:#5D1A1A;">
+      <div class="step-num-row">
+        <div class="step-num" style="background:#5D1A1A;color:#F87171;">↩</div>
+        <div class="step-title" style="color:#F87171;">Nicht qualifiziert → Absage</div>
+      </div>
+      <div class="step-items">
+        <div class="si">Freundliche Absage-DM an Lead (automatisch)</div>
+        <div class="si">delete_after = now() + <span class="badge-inline" style="background:#5D1A1A;color:#F87171;">30 Tage</span></div>
+        <div class="si">Lead-Status → 'abgesagt'</div>
+      </div>
+    </div>
+  </div>
+  <!-- WEITERFÜHREN -->
+  <div class="step" style="background:linear-gradient(135deg,#081828,#050F1E);border:1px solid #1E4A6E;">
+    <div class="step-icon-col" style="background:rgba(30,74,110,0.3);">
+      <div class="step-icon-wrap" style="background:#00AF41;">
+        <svg viewBox="0 0 28 28" fill="none" stroke="white" stroke-width="2.5"><polyline points="6,14 12,20 22,8"/></svg>
+      </div>
+      <div class="tech-name" style="color:#34D399;">LP2<br>senden</div>
+    </div>
+    <div class="step-content" style="border-color:#1E4A6E;">
+      <div class="step-num-row">
+        <div class="step-num" style="background:#1E4A6E;color:#60A5FA;">5</div>
+        <div class="step-title">Interessant → Selbstauskunft anfordern</div>
+      </div>
+      <div class="step-items">
+        <div class="si">n8n WF3: lp2_token generieren (gültig 7 Tage)</div>
+        <div class="si">DM: "Vielen Dank für die Besichtigung! Bitte füllen Sie hier Ihre Selbstauskunft aus: [LP2-Link]"</div>
+        <div class="si">Lead-Status → <span class="badge-inline" style="background:#1E4A6E;color:#60A5FA;">'selbstauskunft_angefordert'</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PHASE 3 ═══ -->
+<div style="height:16px;"></div>
+<div class="sys-hdr">
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,transparent,#3D2800);"></div>
+  <div class="sys-hdr-label" style="background:#1E1200;color:#FBBF24;border:1px solid #3D2800;">Phase 3 — Selbstauskunft (LP2)</div>
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,#3D2800,transparent);"></div>
+</div>
+
+<!-- LP2 CARD -->
+<div class="lp-card" style="background:linear-gradient(135deg,#0E0800,#080500);border:1px solid #3D2800;">
+  <div class="lp-top" style="background:rgba(61,40,0,0.3);border-bottom:1px solid #3D2800;">
+    <div style="width:36px;height:36px;border-radius:10px;background:#1E1200;border:1px solid #3D2800;display:flex;align-items:center;justify-content:center;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FBBF24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+    </div>
+    <div>
+      <div class="lp-badge" style="background:rgba(251,191,36,0.1);color:#FBBF24;border:1px solid rgba(251,191,36,0.3);margin-bottom:3px;">Landing Page 2 · Selbstauskunft · kein Dokument-Upload</div>
+      <div class="lp-title">Mieter- oder Käuferselbstauskunft — /auskunft?t={token}&typ=miete|verkauf</div>
+    </div>
+  </div>
+  <div class="lp-body">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <!-- MIETE -->
+      <div>
+        <div style="font-size:9px;font-weight:800;color:#FBBF24;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">TYP=MIETE — Mieterselbstauskunft</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="lp-field-box" style="background:rgba(61,40,0,0.3);border-color:#3D2800;color:#8A7020;font-size:9px;">Monatl. Nettoeinkommen: 3.200 €</div>
+          <div class="lp-field-box" style="background:rgba(61,40,0,0.3);border-color:#3D2800;color:#8A7020;font-size:9px;">Beschäftigung: Angestellt (unbefristet)</div>
+          <div class="lp-field-box" style="background:rgba(61,40,0,0.3);border-color:#3D2800;color:#8A7020;font-size:9px;">Arbeitgeber: Beispiel GmbH · seit 2019</div>
+          <div class="lp-field-box" style="background:rgba(61,40,0,0.3);border-color:#3D2800;color:#8A7020;font-size:9px;">Haushalt: 2 Personen · keine Haustiere</div>
+          <div class="lp-field-box" style="background:rgba(61,40,0,0.3);border-color:#3D2800;color:#8A7020;font-size:9px;">Einzug: 01.08.2026 · Warum diese Wohnung...</div>
+        </div>
+      </div>
+      <!-- KAUF -->
+      <div>
+        <div style="font-size:9px;font-weight:800;color:#F59E0B;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">TYP=VERKAUF — Käuferprofil</div>
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div class="lp-field-box" style="background:rgba(61,40,0,0.2);border-color:#2A1800;color:#8A7020;font-size:9px;">Kaufbudget: 380.000 €</div>
+          <div class="lp-field-box" style="background:rgba(61,40,0,0.2);border-color:#2A1800;color:#8A7020;font-size:9px;">Eigenkapital: 80.000 € vorhanden</div>
+          <div class="lp-field-box" style="background:rgba(61,40,0,0.2);border-color:#2A1800;color:#8A7020;font-size:9px;">Finanzierung: Bankfinanzierung beantragt</div>
+          <div class="lp-field-box" style="background:rgba(61,40,0,0.2);border-color:#2A1800;color:#8A7020;font-size:9px;">Bestätigung: vorhanden</div>
+          <div class="lp-field-box" style="background:rgba(61,40,0,0.2);border-color:#2A1800;color:#8A7020;font-size:9px;">Kaufzeitraum: Sofort · Eigennutzung</div>
+        </div>
+      </div>
+    </div>
+    <div class="lp-dsgvo" style="background:rgba(251,191,36,0.04);border:1px solid rgba(251,191,36,0.15);margin-top:10px;">
+      <div class="dsgvo-checkbox"><svg width="10" height="10" viewBox="0 0 10 10" fill="none"><polyline points="2,5 4,7 8,3" stroke="#FBBF24" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <span style="color:#8A7020;font-size:10px;">Ich bestätige die Richtigkeit meiner Angaben. Bei Ablehnung werden meine Daten nach <strong style="color:#FBBF24;">30 Tagen</strong> automatisch gelöscht. <u>Datenschutzerklärung</u></span>
+    </div>
+  </div>
+</div>
+
+<div class="arr-wrap">
+  <div class="arr-inner"><div class="arr-shaft" style="background:#3D2800;"></div><div class="arr-head" style="border-top:8px solid #3D2800;"></div></div>
+  <span class="arr-label">Formular eingereicht · n8n WF4 · Mistral analysiert</span>
+</div>
+
+<!-- STEP 6 -->
+<div class="step" style="background:linear-gradient(135deg,#0E0A28,#080618);border:1px solid #2D1B5E;">
+  <div class="step-icon-col" style="background:rgba(45,27,94,0.3);">
+    <div class="step-icon-wrap" style="background:linear-gradient(135deg,#FF7000,#CC4400);">
+      <svg viewBox="0 0 28 28" fill="white"><rect x="1" y="1" width="5" height="5" rx="0.5"/><rect x="7" y="1" width="5" height="5" rx="0.5" opacity="0.8"/><rect x="1" y="7" width="5" height="5" rx="0.5" opacity="0.8"/><rect x="7" y="7" width="5" height="5" rx="0.5"/><rect x="15" y="1" width="5" height="5" rx="0.5" opacity="0.6"/></svg>
+    </div>
+    <div class="tech-name" style="color:#C084FC;">Mistral<br>Analyse</div>
+  </div>
+  <div class="step-content" style="border-color:#2D1B5E;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#2D1B5E;color:#C084FC;">6</div>
+      <div class="step-title">Mistral KI-Bewertung der Selbstauskunft</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Typ=Miete: Einkommensfaktor (Netto ÷ Kaltmiete), Arbeitsstabilität, Haushaltsgröße, Haustiere</div>
+      <div class="si">Typ=Verkauf: Eigenkapitalquote, Finanzierungsklarheit, Kaufzeitraum-Ernst</div>
+      <div class="si">Output: <span class="badge-inline" style="background:#2D1B5E;color:#C084FC;">Score 0–100</span> + Begründung + Stärken + Risiken (AGG-konform)</div>
+      <div class="si">Supabase: selbstauskuenfte-Eintrag mit allen Mistral-Feldern aktualisiert</div>
+    </div>
+    <div class="agg-note">⚖️ AGG-Hinweis: Mistral bewertet ausschließlich wirtschaftliche Kriterien. Keine Bewertung von Nationalität, Herkunft, Religion, Geschlecht oder Alter.</div>
+  </div>
+</div>
+
+<!-- ═══ PHASE 4 ═══ -->
+<div style="height:16px;"></div>
+<div class="sys-hdr">
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,transparent,#0F3818);"></div>
+  <div class="sys-hdr-label" style="background:#081408;color:#34D399;border:1px solid #0F3818;">Phase 4 — Entscheidung (Dashboard · Vergleichsansicht)</div>
+  <div class="sys-hdr-line" style="background:linear-gradient(90deg,#0F3818,transparent);"></div>
+</div>
+
+<!-- COMPARISON VIEW -->
+<div style="background:linear-gradient(135deg,#040C08,#020806);border:1px solid #0F3818;border-radius:16px;overflow:hidden;">
+  <div style="padding:12px 20px;background:rgba(15,56,24,0.3);border-bottom:1px solid #0F3818;display:flex;align-items:center;gap:10px;">
+    <div style="width:36px;height:36px;border-radius:10px;background:#0F3818;display:flex;align-items:center;justify-content:center;">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><rect x="3" y="3" width="7" height="18"/><rect x="14" y="3" width="7" height="18"/></svg>
+    </div>
+    <div>
+      <div class="lp-badge" style="background:rgba(52,211,153,0.1);color:#34D399;border:1px solid rgba(52,211,153,0.3);margin-bottom:3px;">Dashboard · Tab "Selbstauskünfte" · Inserat: Mainzer Str. 12</div>
+      <div class="lp-title">Alle Selbstauskünfte nebeneinander · LLM-Score + Begründung</div>
+    </div>
+  </div>
+  <div style="padding:16px;">
+    <div class="compare-grid">
+      <!-- Kandidat 1 -->
+      <div class="compare-card" style="background:rgba(15,56,24,0.2);border-color:#0F3818;">
+        <div class="compare-name">Max Mustermann</div>
+        <div class="score-circle" style="background:rgba(34,197,94,0.15);border-color:#22C55E;color:#22C55E;">92</div>
+        <div class="compare-row"><span class="compare-key">Einkommen</span><span class="compare-val" style="color:#22C55E;">3.200€ · 3.8x ✓</span></div>
+        <div class="compare-row"><span class="compare-key">Beschäftigung</span><span class="compare-val" style="color:#22C55E;">Unbefristet ✓</span></div>
+        <div class="compare-row"><span class="compare-key">Haushalt</span><span class="compare-val" style="color:#E2EAF8;">2 Pers. · keine Tiere</span></div>
+        <div class="compare-row"><span class="compare-key">Einzug</span><span class="compare-val" style="color:#E2EAF8;">01.08 ✓</span></div>
+        <div class="compare-reason">"Stabiles Einkommen, passendes Verhältnis zur Kaltmiete, unbefristete Anstellung."</div>
+        <div class="fav-btn" style="background:rgba(34,197,94,0.1);border-color:#22C55E;color:#22C55E;">★ Favorit markiert</div>
+      </div>
+      <!-- Kandidat 2 -->
+      <div class="compare-card" style="background:rgba(30,42,62,0.3);border-color:#1E2A3E;">
+        <div class="compare-name">Anna Schmidt</div>
+        <div class="score-circle" style="background:rgba(245,158,11,0.15);border-color:#F59E0B;color:#F59E0B;">71</div>
+        <div class="compare-row"><span class="compare-key">Einkommen</span><span class="compare-val" style="color:#F59E0B;">2.700€ · 3.2x ✓</span></div>
+        <div class="compare-row"><span class="compare-key">Beschäftigung</span><span class="compare-val" style="color:#F59E0B;">Befristet ⚠</span></div>
+        <div class="compare-row"><span class="compare-key">Haushalt</span><span class="compare-val" style="color:#E2EAF8;">1 Pers. · 1 Katze</span></div>
+        <div class="compare-row"><span class="compare-key">Einzug</span><span class="compare-val" style="color:#E2EAF8;">01.09 ○</span></div>
+        <div class="compare-reason">"Ausreichendes Einkommen, befristetes Arbeitsverhältnis mit Risiko."</div>
+        <div class="fav-btn" style="background:rgba(30,42,62,0.3);border-color:#1E2A3E;color:#4A6080;">☆ Als Favorit</div>
+      </div>
+      <!-- Kandidat 3 -->
+      <div class="compare-card" style="background:rgba(20,10,10,0.3);border-color:#3D1010;">
+        <div class="compare-name">Peter Meyer</div>
+        <div class="score-circle" style="background:rgba(239,68,68,0.15);border-color:#EF4444;color:#EF4444;">38</div>
+        <div class="compare-row"><span class="compare-key">Einkommen</span><span class="compare-val" style="color:#EF4444;">1.500€ · 1.8x ✗</span></div>
+        <div class="compare-row"><span class="compare-key">Beschäftigung</span><span class="compare-val" style="color:#EF4444;">Arbeitssuchend ✗</span></div>
+        <div class="compare-row"><span class="compare-key">Haushalt</span><span class="compare-val" style="color:#E2EAF8;">4 Pers. · Hund</span></div>
+        <div class="compare-row"><span class="compare-key">Einzug</span><span class="compare-val" style="color:#E2EAF8;">Sofort</span></div>
+        <div class="compare-reason">"Einkommensfaktor unter Mindestgrenze, keine feste Beschäftigung."</div>
+        <div class="fav-btn" style="background:rgba(61,16,16,0.3);border-color:#5D1A1A;color:#F87171;">❌ Absagen</div>
+      </div>
+    </div>
+    <div style="margin-top:14px;padding:10px 14px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:10px;display:flex;align-items:center;justify-content:space-between;">
+      <span style="font-size:11px;color:#34D399;font-weight:600;">1 Favorit ausgewählt: Max Mustermann</span>
+      <div style="display:flex;gap:8px;">
+        <div class="dash-btn" style="background:#0F3818;color:#34D399;border:1px solid #1A5A28;padding:7px 16px;font-size:10px;">✅ Zusage an Auswahl senden</div>
+        <div class="dash-btn" style="background:#2A0808;color:#F87171;border:1px solid #3D1010;padding:7px 16px;font-size:10px;">❌ Alle absagen</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="arr-wrap" style="margin-top:4px;">
+  <div class="arr-inner"><div class="arr-shaft" style="background:#0F3818;"></div><div class="arr-head" style="border-top:8px solid #0F3818;"></div></div>
+  <span class="arr-label">n8n WF5a: Zusage + WF5b: Alle anderen absagen</span>
+</div>
+
+<!-- STEP 7 -->
+<div class="step" style="background:linear-gradient(135deg,#081C10,#061208);border:1px solid #0F3818;">
+  <div class="step-icon-col" style="background:rgba(15,56,24,0.3);">
+    <div class="step-icon-wrap" style="background:#00AF41;">
+      <svg viewBox="0 0 28 28" fill="none"><rect x="4" y="12" width="20" height="13" rx="2" fill="white"/><path d="M4 15l10 5 10-5" stroke="#00AF41" stroke-width="1.5"/></svg>
+    </div>
+    <div class="tech-name" style="color:#34D399;">DM<br>Versand</div>
+  </div>
+  <div class="step-content" style="border-color:#0F3818;">
+    <div class="step-num-row">
+      <div class="step-num" style="background:#0F3818;color:#34D399;">7</div>
+      <div class="step-title">Zusage + automatische Absagen an alle anderen</div>
+    </div>
+    <div class="step-items">
+      <div class="si">Favorit: Zusage-DM "Wir freuen uns, Ihnen mitzuteilen..." + nächste Schritte</div>
+      <div class="si">Alle anderen Bewerber: Freundliche Absage-DM → delete_after = <span class="badge-inline" style="background:#0F3818;color:#34D399;">+30 Tage</span></div>
+      <div class="si">Lead-Status → <span class="badge-inline" style="background:#0F3818;color:#34D399;">'zugesagt'</span> / <span class="badge-inline" style="background:#3D1010;color:#F87171;">'abgesagt'</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTO DELETE -->
+<div style="display:flex;justify-content:center;padding:0 44px;margin:4px 0;">
+  <div style="display:flex;flex-direction:column;align-items:center;">
+    <div style="width:2px;height:24px;background:repeating-linear-gradient(180deg,#3D1020 0px,#3D1020 4px,transparent 4px,transparent 8px);"></div>
+    <div style="width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid #3D1020;"></div>
+  </div>
+  <span style="font-size:9px;color:#5A2030;font-weight:600;margin-left:8px;align-self:center;">30 Tage nach Absage — n8n WF6 · täglich 03:00 Uhr</span>
+</div>
+
+<div class="delete-card" style="background:linear-gradient(135deg,#0E0508,#090306);border-color:#3D1020;">
+  <div style="width:52px;height:52px;border-radius:14px;background:#3D1020;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F87171" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+  </div>
+  <div style="flex:1;">
+    <div style="font-size:12px;font-weight:700;color:#F87171;margin-bottom:4px;">Auto-Delete — 30-Tage-Löschung (DSGVO Art. 5 Abs. 1e)</div>
+    <div style="font-size:11px;color:#6A3040;line-height:1.5;">
+      n8n WF6 prüft täglich: delete_after &lt; now() → Selbstauskünfte gelöscht · Lead-Daten anonymisiert · Supabase Storage bereinigt. Bei Zusage: alle anderen Bewerber nach 30 Tagen automatisch gelöscht.
+    </div>
+  </div>
+  <div style="text-align:center;flex-shrink:0;padding-left:12px;">
+    <div class="delete-num" style="color:#F87171;">30</div>
+    <div class="delete-unit" style="color:#6A3040;">Tage Max</div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="leg-item"><div class="leg-icon" style="background:#00AF41;"><svg viewBox="0 0 14 14" fill="white"><path d="M7 1L1 6h2v6h3v-3h2v3h3V6h2L7 1z"/></svg></div>ImmoScout24 REST API (OAuth1)</div>
+  <div class="leg-item"><div class="leg-icon" style="background:#EA4B26;"><svg viewBox="0 0 14 14" fill="none"><circle cx="3.5" cy="7" r="2" fill="white"/><circle cx="10.5" cy="3.5" r="1.8" fill="white" opacity="0.9"/><circle cx="10.5" cy="10.5" r="1.8" fill="white" opacity="0.9"/><line x1="5.5" y1="6" x2="9" y2="4.3" stroke="white" stroke-width="1"/><line x1="5.5" y1="8" x2="9" y2="9.7" stroke="white" stroke-width="1"/></svg></div>n8n (Hetzner Nürnberg, DE)</div>
+  <div class="leg-item"><div class="leg-icon" style="background:#1C1C1C;"><svg viewBox="0 0 14 14" fill="none"><ellipse cx="7" cy="3.5" rx="5" ry="1.8" fill="#3ECF8E"/><path d="M2 3.5v3.5c0 1 2.2 1.8 5 1.8s5-.8 5-1.8V3.5" stroke="#3ECF8E" stroke-width="0.8"/></svg></div>Supabase (Frankfurt, EU)</div>
+  <div class="leg-item"><div class="leg-icon" style="background:#000;border:1px solid #333;"><svg viewBox="0 0 14 14" fill="white"><polygon points="7,2 13,12 1,12"/></svg></div>Vercel EU Edge (LP1 + LP2)</div>
+  <div class="leg-item"><div class="leg-icon" style="background:linear-gradient(135deg,#FF7000,#CC4400);"><svg viewBox="0 0 14 14" fill="white"><rect x="1" y="1" width="4" height="4" rx="0.5"/><rect x="5.5" y="1" width="4" height="4" rx="0.5" opacity="0.8"/><rect x="1" y="5.5" width="4" height="4" rx="0.5" opacity="0.8"/><rect x="5.5" y="5.5" width="4" height="4" rx="0.5"/></svg></div>Mistral AI (Paris, EU)</div>
+  <div class="leg-item"><div class="leg-icon" style="background:#0078D4;"><svg viewBox="0 0 14 14" fill="white"><rect x="1" y="2.5" width="12" height="9" rx="1"/><path d="M1 5.5l6 3 6-3" stroke="#0078D4" stroke-width="0.8"/></svg></div>Microsoft Outlook (Graph API)</div>
+  <div class="leg-item"><div class="leg-icon" style="background:#362D79;"><svg viewBox="0 0 14 14" fill="white"><circle cx="7" cy="5" r="3"/><path d="M3 12c0-2.2 1.8-4 4-4s4 1.8 4 4" fill="none" stroke="white" stroke-width="1"/></svg></div>Human-in-the-Loop (Mitarbeiter)</div>
+  <div class="leg-item"><div class="leg-icon" style="background:#3D1020;"><svg viewBox="0 0 14 14" fill="none" stroke="#F87171" stroke-width="1.2"><polyline points="1.5 3.5 2.5 3.5 12.5 3.5"/><path d="M11.5 3.5v8a1 1 0 0 1-1 1H3.5a1 1 0 0 1-1-1v-8"/></svg></div>Auto-Delete 30 Tage (DSGVO)</div>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,226 @@
+{
+  "name": "WF4 – LP2 Selbstauskunft eingereicht (Mistral, notify-only wenn persistedByLp2)",
+  "nodes": [
+    {
+      "id": "wf4-webhook-sa-eingereicht",
+      "name": "Selbstauskunft eingereicht Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "selbstauskunft-eingereicht",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "wf4-selbstauskunft-eingereicht-lp2"
+    },
+    {
+      "id": "wf4-if-persisted-by-lp2",
+      "name": "persistedByLp2?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "cond-persisted-lp2",
+              "leftValue": "={{ $json.body.persistedByLp2 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "wf4-sa-laden",
+      "name": "Selbstauskunft laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [700, 180],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "selbstauskuenfte",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $('Selbstauskunft eingereicht Webhook').item.json.body.selbstauskunftId }}",
+        "returnAll": false,
+        "limit": 1
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "wf4-inserat-laden",
+      "name": "Inserat laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [920, 180],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "inserate",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $('Selbstauskunft eingereicht Webhook').item.json.body.inseratUuid }}",
+        "returnAll": false,
+        "limit": 1
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "wf4-mistral-prompt-prep",
+      "name": "Mistral Prompt vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1140, 180],
+      "parameters": {
+        "jsCode": "const body = $('Selbstauskunft eingereicht Webhook').item.json.body ?? $('Selbstauskunft eingereicht Webhook').item.json;\nconst sa = $('Selbstauskunft laden').item.json;\nconst inserat = $('Inserat laden').item.json;\nconst typ = body.typ || inserat.typ || 'miete';\n\nlet userPrompt;\nif (typ === 'verkauf') {\n  userPrompt = `Bewerte dieses Käuferprofil für ein Objekt mit Kaufpreis ${inserat.kaufpreis_eur || 'unbekannt'}€:\n- Kaufbudget: ${sa.kaufbudget_eur}€\n- Eigenkapital: ${sa.eigenkapital_vorhanden}${sa.eigenkapital_hoehe_eur ? ' (' + sa.eigenkapital_hoehe_eur + '€)' : ''}\n- Finanzierung: ${sa.finanzierung_typ}\n- Finanzierungsbestätigung: ${sa.finanzierungsbestaetigung}\n- Kaufzeitraum: ${sa.kaufzeitraum}\n- Kaufgrund: ${sa.kaufgrund}\n- In laufendem Verkauf: ${sa.in_laufendem_verkauf ? 'Ja' : 'Nein'}\n\nAntworte NUR mit JSON:\n{\n  \"score\": 0-100,\n  \"begruendung\": \"2-3 Sätze sachlich\",\n  \"staerken\": [\"Punkt 1\"],\n  \"risiken\": [\"Punkt 1\"] oder []\n}\nAGG-Hinweis: Keine Bewertung von Nationalität, Herkunft, Religion, Geschlecht.`;\n} else {\n  const faktor = inserat.kaltmiete_eur > 0 && sa.nettoeinkommen_eur\n    ? (sa.nettoeinkommen_eur / inserat.kaltmiete_eur).toFixed(2)\n    : 'n/a';\n  userPrompt = `Bewerte diese Mietbewerbung für eine Wohnung mit ${inserat.kaltmiete_eur}€ Kaltmiete:\n- Einkommensfaktor: ${faktor}x (Minimum 3x)\n- Beschäftigung: ${sa.beschaeftigung_status}, ${sa.arbeitsverhaeltnis || 'n/a'}\n- Haushalt: ${sa.haushaltsgroesse} Personen\n- Haustiere: ${sa.haustiere ? sa.haustiere_art || 'Ja' : 'Nein'}\n- Einzugswunsch: ${sa.einzugstermin}\n- Begründung: ${sa.warum_diese_wohnung || 'n/a'}\n\nAntworte NUR mit JSON:\n{\n  \"score\": 0-100,\n  \"begruendung\": \"2-3 Sätze sachlich\",\n  \"staerken\": [\"Punkt 1\", \"Punkt 2\"],\n  \"risiken\": [\"Punkt 1\"] oder []\n}\nAGG-Hinweis: Keine Bewertung von Nationalität, Herkunft, Religion, Geschlecht.`;\n}\n\nreturn [{\n  json: {\n    selbstauskunftId: body.selbstauskunftId,\n    leadUuid: body.leadUuid,\n    typ,\n    mistralPrompt: userPrompt\n  }\n}];"
+      }
+    },
+    {
+      "id": "wf4-mistral-http",
+      "name": "Mistral Analyse",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1360, 180],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-small-latest\",\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Du bist ein Assistent einer deutschen Immobilienverwaltung. Bewerte Selbstauskünfte sachlich und AGG-konform. Antworte nur mit validem JSON.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.mistralPrompt) }}\n    }\n  ],\n  \"temperature\": 0.1,\n  \"max_tokens\": 600\n}",
+        "options": {}
+      },
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "MISTRAL_CREDENTIAL_ID",
+          "name": "Mistral RAIS"
+        }
+      }
+    },
+    {
+      "id": "wf4-mistral-parse",
+      "name": "Mistral Antwort parsen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1580, 180],
+      "parameters": {
+        "jsCode": "const content = $input.first().json.choices?.[0]?.message?.content || '';\nconst prep = $('Mistral Prompt vorbereiten').item.json;\n\nlet analyse;\ntry {\n  const match = content.match(/\\{[\\s\\S]*\\}/);\n  analyse = JSON.parse(match ? match[0] : content);\n} catch (e) {\n  analyse = {\n    score: 50,\n    begruendung: 'Automatische Analyse konnte nicht vollständig geparst werden.',\n    staerken: [],\n    risiken: ['Parsing-Fehler']\n  };\n}\n\nconst staerken = Array.isArray(analyse.staerken) ? analyse.staerken.join('|') : '';\nconst risiken = Array.isArray(analyse.risiken) ? analyse.risiken.join('|') : '';\n\nreturn [{\n  json: {\n    selbstauskunftId: prep.selbstauskunftId,\n    leadUuid: prep.leadUuid,\n    score: analyse.score ?? 0,\n    begruendung: analyse.begruendung || '',\n    staerken,\n    risiken,\n    analysiert_at: new Date().toISOString()\n  }\n}];"
+      }
+    },
+    {
+      "id": "wf4-sa-update",
+      "name": "Mistral Score speichern",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1800, 180],
+      "parameters": {
+        "operation": "update",
+        "tableId": "selbstauskuenfte",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.selbstauskunftId }}",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "mistral_score", "fieldValue": "={{ $json.score }}" },
+            { "fieldId": "mistral_begruendung", "fieldValue": "={{ $json.begruendung }}" },
+            { "fieldId": "mistral_staerken", "fieldValue": "={{ $json.staerken }}" },
+            { "fieldId": "mistral_risiken", "fieldValue": "={{ $json.risiken }}" },
+            { "fieldId": "analysiert_at", "fieldValue": "={{ $json.analysiert_at }}" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "wf4-telegram-staff",
+      "name": "Mitarbeiter-Alert Telegram (Demo)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [2020, 180],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "DEINE_CHAT_ID",
+        "text": "=📋 *Neue Selbstauskunft*\n\nLead: `{{ $('Mistral Antwort parsen').item.json.leadUuid }}`\nScore: *{{ $('Mistral Antwort parsen').item.json.score }}/100*\n\n{{ $('Mistral Antwort parsen').item.json.begruendung }}",
+        "additionalFields": { "parse_mode": "Markdown" }
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram RAIS Demo Bot"
+        }
+      }
+    },
+    {
+      "id": "wf4-legacy-branch",
+      "name": "Legacy: DB Writes (ohne LP2)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 420],
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body ?? $input.first().json;\nreturn [{ json: { ...body, legacy: true, note: 'WF4 Legacy: INSERT selbstauskuenfte + lead update hier' } }];"
+      }
+    }
+  ],
+  "connections": {
+    "Selbstauskunft eingereicht Webhook": {
+      "main": [[{ "node": "persistedByLp2?", "type": "main", "index": 0 }]]
+    },
+    "persistedByLp2?": {
+      "main": [
+        [{ "node": "Selbstauskunft laden", "type": "main", "index": 0 }],
+        [{ "node": "Legacy: DB Writes (ohne LP2)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Selbstauskunft laden": {
+      "main": [[{ "node": "Inserat laden", "type": "main", "index": 0 }]]
+    },
+    "Inserat laden": {
+      "main": [[{ "node": "Mistral Prompt vorbereiten", "type": "main", "index": 0 }]]
+    },
+    "Mistral Prompt vorbereiten": {
+      "main": [[{ "node": "Mistral Analyse", "type": "main", "index": 0 }]]
+    },
+    "Mistral Analyse": {
+      "main": [[{ "node": "Mistral Antwort parsen", "type": "main", "index": 0 }]]
+    },
+    "Mistral Antwort parsen": {
+      "main": [
+        [
+          { "node": "Mistral Score speichern", "type": "main", "index": 0 },
+          { "node": "Mitarbeiter-Alert Telegram (Demo)", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "meta": {
+    "description": "LP2 persistedByLp2=true → keine DB-Doppelwrites. Mistral-Score in selbstauskuenfte. DEINE_CHAT_ID ersetzen."
+  }
+}

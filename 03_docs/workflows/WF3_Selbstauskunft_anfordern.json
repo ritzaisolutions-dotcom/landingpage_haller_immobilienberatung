@@ -1,0 +1,160 @@
+{
+  "name": "WF3 – Selbstauskunft anfordern → LP2-Link senden",
+  "nodes": [
+    {
+      "id": "wf3-webhook-sa-anfordern",
+      "name": "Selbstauskunft anfordern Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "selbstauskunft-anfordern",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "wf3-selbstauskunft-anfordern"
+    },
+    {
+      "id": "wf3-lead-laden",
+      "name": "Lead laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [460, 300],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.query.leadId }}",
+        "returnAll": false,
+        "limit": 1
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "wf3-inserat-laden",
+      "name": "Inserat laden",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [680, 300],
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "inserate",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $('Lead laden').item.json.inserat_id }}",
+        "returnAll": false,
+        "limit": 1
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "wf3-lp2-token-prep",
+      "name": "LP2-Token + Nachricht",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [900, 300],
+      "parameters": {
+        "jsCode": "const crypto = require('crypto');\nconst lead = $('Lead laden').item.json;\nconst inserat = $('Inserat laden').item.json;\n\nconst lp2Token = lead.lp2_token || crypto.randomUUID();\nconst typ = inserat?.typ || 'miete';\nconst lp2Base = process.env.LP2_BASE_URL || 'https://landingpage-haller-immobilienberatu.vercel.app';\nconst lp2Url = `${lp2Base.replace(/\\/$/, '')}/auskunft?t=${encodeURIComponent(lp2Token)}&typ=${typ}`;\nconst now = new Date().toISOString();\n\nconst dmText = `Guten Tag ${lead.name},\\n\\nvielen Dank für Ihre Besichtigung!\\n\\nWenn Sie weiterhin Interesse haben, füllen Sie bitte unsere Selbstauskunft aus:\\n\\n${lp2Url}\\n\\nDie Angaben helfen uns bei der Auswahl passender Mieter/Käufer.\\n\\nMit freundlichen Grüßen\\nHaller Immobilienberatung GmbH`;\n\nconst leadChatId = lead.is24_contact_id || 'DEINE_CHAT_ID';\n\nreturn [{\n  json: {\n    leadId: lead.id,\n    leadUuid: lead.uuid,\n    name: lead.name,\n    lp2Token,\n    lp2Url,\n    typ,\n    now,\n    dmText,\n    leadChatId,\n    inseratTitel: inserat?.titel || lead.inserat_id\n  }\n}];"
+      }
+    },
+    {
+      "id": "wf3-lead-update",
+      "name": "Lead aktualisieren",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [1120, 300],
+      "parameters": {
+        "operation": "update",
+        "tableId": "leads",
+        "filterType": "string",
+        "matchType": "equals",
+        "valueToMatchOn": "={{ $json.leadId }}",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "lp2_token",
+              "fieldValue": "={{ $json.lp2Token }}"
+            },
+            {
+              "fieldId": "selbstauskunft_angefordert_at",
+              "fieldValue": "={{ $json.now }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "selbstauskunft_angefordert"
+            },
+            {
+              "fieldId": "last_activity_at",
+              "fieldValue": "={{ $json.now }}"
+            },
+            {
+              "fieldId": "landing_page_url",
+              "fieldValue": "={{ $json.lp2Url }}"
+            }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": {
+          "id": "SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase RAIS"
+        }
+      }
+    },
+    {
+      "id": "wf3-telegram-lead",
+      "name": "LP2-Link via Telegram (Demo)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1340, 300],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "={{ $('LP2-Token + Nachricht').item.json.leadChatId }}",
+        "text": "={{ $('LP2-Token + Nachricht').item.json.dmText }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram RAIS Demo Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Selbstauskunft anfordern Webhook": {
+      "main": [[{ "node": "Lead laden", "type": "main", "index": 0 }]]
+    },
+    "Lead laden": {
+      "main": [[{ "node": "Inserat laden", "type": "main", "index": 0 }]]
+    },
+    "Inserat laden": {
+      "main": [[{ "node": "LP2-Token + Nachricht", "type": "main", "index": 0 }]]
+    },
+    "LP2-Token + Nachricht": {
+      "main": [[{ "node": "Lead aktualisieren", "type": "main", "index": 0 }]]
+    },
+    "Lead aktualisieren": {
+      "main": [[{ "node": "LP2-Link via Telegram (Demo)", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "Dashboard GET /webhook/selbstauskunft-anfordern?leadId={uuid}. Generiert lp2_token, aktualisiert Lead, sendet LP2-Link per Telegram (Demo). Env LP2_BASE_URL. DEINE_CHAT_ID Fallback für manuelle Leads."
+  }
+}

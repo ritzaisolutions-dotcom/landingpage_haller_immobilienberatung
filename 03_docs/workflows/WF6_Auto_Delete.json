@@ -1,0 +1,324 @@
+{
+  "name": "WF6 – Auto-Delete (14d inaktiv + delete_after)",
+  "nodes": [
+    {
+      "id": "wf6-schedule-daily",
+      "name": "Täglich um 03:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 3 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "wf6-init-stats",
+      "name": "Zähler initialisieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [460, 300],
+      "parameters": {
+        "jsCode": "return [{ json: { inactiveMarked: 0, saDeleted: 0, leadsDeleted: 0 } }];"
+      }
+    },
+    {
+      "id": "wf6-load-inactive-leads",
+      "name": "Inaktive Frühanfragen laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 180],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/leads?status=in.(neu,dm_gesendet)&last_activity_at=lt.{{ new Date(Date.now() - 14*24*60*60*1000).toISOString() }}&delete_after=is.null&select=id,uuid,name,status,last_activity_at",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf6-mark-inactive-batch",
+      "name": "Inaktive für Löschung markieren",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [900, 180],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "wf6-set-delete-after-inactive",
+      "name": "delete_after setzen (inaktiv)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 180],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/leads?id=eq.{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"delete_after\": \"{{ new Date().toISOString() }}\",\n  \"status\": \"geloescht\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "wf6-load-sa-due",
+      "name": "Selbstauskünfte fällig laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 380],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/selbstauskuenfte?delete_after=lt.{{ new Date().toISOString() }}&select=id,lead_id",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf6-delete-sa-batch",
+      "name": "Selbstauskünfte löschen",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [900, 380],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "wf6-delete-sa",
+      "name": "SA DELETE",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 380],
+      "parameters": {
+        "method": "DELETE",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/selbstauskuenfte?id=eq.{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf6-load-leads-due",
+      "name": "Leads fällig laden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, 560],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/leads?delete_after=lt.{{ new Date().toISOString() }}&select=id,uuid,name,status",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "wf6-delete-leads-batch",
+      "name": "Leads löschen",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [900, 560],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "wf6-anonymize-lead",
+      "name": "Lead anonymisieren",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1120, 560],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/leads?id=eq.{{ $json.id }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "={{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"name\": \"GELÖSCHT\",\n  \"email\": null,\n  \"telefon\": null,\n  \"nachricht_text\": null,\n  \"mitarbeiter_notiz\": null,\n  \"lp1_token\": null,\n  \"lp2_token\": null,\n  \"status\": \"geloescht\"\n}",
+        "options": {}
+      }
+    },
+    {
+      "id": "wf6-report-prep",
+      "name": "Bericht vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1340, 300],
+      "parameters": {
+        "jsCode": "const inactive = $('Inaktive Frühanfragen laden').all().flatMap(i => Array.isArray(i.json) ? i.json : [i.json]).filter(x => x && x.id);\nconst saDue = $('Selbstauskünfte fällig laden').all().flatMap(i => Array.isArray(i.json) ? i.json : [i.json]).filter(x => x && x.id);\nconst leadsDue = $('Leads fällig laden').all().flatMap(i => Array.isArray(i.json) ? i.json : [i.json]).filter(x => x && x.id);\n\nconst text = `🗑 WF6 Auto-Delete Report\\n\\n• Inaktive Frühanfragen (14d): ${inactive.length}\\n• Selbstauskünfte gelöscht: ${saDue.length}\\n• Leads anonymisiert: ${leadsDue.length}\\n\\n${new Date().toLocaleString('de-DE', { timeZone: 'Europe/Berlin' })}`;\n\nreturn [{ json: { reportText: text, inactive: inactive.length, sa: saDue.length, leads: leadsDue.length } }];"
+      }
+    },
+    {
+      "id": "wf6-telegram-report",
+      "name": "Telegram Bericht (Demo)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1560, 300],
+      "parameters": {
+        "operation": "sendMessage",
+        "chatId": "DEINE_CHAT_ID",
+        "text": "={{ $json.reportText }}",
+        "additionalFields": {}
+      },
+      "credentials": {
+        "telegramApi": {
+          "id": "TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram RAIS Demo Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Täglich um 03:00": {
+      "main": [[{ "node": "Zähler initialisieren", "type": "main", "index": 0 }]]
+    },
+    "Zähler initialisieren": {
+      "main": [[{ "node": "Inaktive Frühanfragen laden", "type": "main", "index": 0 }]]
+    },
+    "Inaktive Frühanfragen laden": {
+      "main": [[{ "node": "Inaktive für Löschung markieren", "type": "main", "index": 0 }]]
+    },
+    "Inaktive für Löschung markieren": {
+      "main": [
+        [{ "node": "delete_after setzen (inaktiv)", "type": "main", "index": 0 }],
+        [{ "node": "Selbstauskünfte fällig laden", "type": "main", "index": 0 }]
+      ]
+    },
+    "delete_after setzen (inaktiv)": {
+      "main": [[{ "node": "Inaktive für Löschung markieren", "type": "main", "index": 0 }]]
+    },
+    "Selbstauskünfte fällig laden": {
+      "main": [[{ "node": "Selbstauskünfte löschen", "type": "main", "index": 0 }]]
+    },
+    "Selbstauskünfte löschen": {
+      "main": [
+        [{ "node": "SA DELETE", "type": "main", "index": 0 }],
+        [{ "node": "Leads fällig laden", "type": "main", "index": 0 }]
+      ]
+    },
+    "SA DELETE": {
+      "main": [[{ "node": "Selbstauskünfte löschen", "type": "main", "index": 0 }]]
+    },
+    "Leads fällig laden": {
+      "main": [[{ "node": "Leads löschen", "type": "main", "index": 0 }]]
+    },
+    "Leads löschen": {
+      "main": [
+        [{ "node": "Lead anonymisieren", "type": "main", "index": 0 }],
+        [{ "node": "Bericht vorbereiten", "type": "main", "index": 0 }]
+      ]
+    },
+    "Lead anonymisieren": {
+      "main": [[{ "node": "Leads löschen", "type": "main", "index": 0 }]]
+    },
+    "Bericht vorbereiten": {
+      "main": [[{ "node": "Telegram Bericht (Demo)", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "V2.2: Täglich 03:00. (1) neu/dm_gesendet ohne Aktivität >14 Tage → delete_after=now. (2) selbstauskuenfte mit delete_after<now löschen. (3) leads mit delete_after<now anonymisieren. Env: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY. DEINE_CHAT_ID ersetzen."
+  }
+}

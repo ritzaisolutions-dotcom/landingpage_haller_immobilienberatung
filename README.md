@@ -7,7 +7,8 @@ Monorepo für die Lead-Qualifizierung und das interne Verwaltungssystem der Hall
 | Ordner | Beschreibung |
 |--------|--------------|
 | [`01_landing_page/`](01_landing_page/) | Mietinteressenten Upload-Portal (Next.js) — personalisierte Lead-Landingpage, PDF-Upload, DSGVO-Einwilligung |
-| [`02_dashboard/`](02_dashboard/) | Internes Verwaltungssystem — Platzhalter für den Dashboard-Build |
+| [`02_dashboard/`](02_dashboard/) | Internes Verwaltungssystem (Dashboard V2.1) |
+| [`04_terminbuchungs_landing/`](04_terminbuchungs_landing/) | LP1 Terminbuchung — `/termin?t={lp1_token}` für Besichtigungstermine |
 | [`03_docs/`](03_docs/) | Projektdokumentation, AVVs, n8n-Workflows, Visualisierungen |
 
 ## 01_landing_page — Upload-Portal
@@ -26,9 +27,23 @@ Demo-URL: `/upload?t=demo` · Datenschutz: `/datenschutz`
 
 ## 02_dashboard — Internes Verwaltungssystem
 
-Separates Repository: **Inserats_Dashboard_Haller**
+```bash
+cd 02_dashboard
+npm install
+npm run dev   # http://localhost:3001
+```
 
-Dieser Ordner ist vorbereitet und wartet auf den Dashboard-Build.
+## 04_terminbuchungs_landing — LP1 Terminbuchung
+
+**Deploy:** [ImmoV_Haller_Terminwahl](https://github.com/ritzaisolutions-dotcom/ImmoV_Haller_Terminwahl.git)
+
+```bash
+cd 04_terminbuchungs_landing
+npm install
+npm run dev   # http://localhost:3000
+```
+
+Demo-URL (nach `supabase/seed_lp1_demo.sql`): `/termin?t=demo-lp1-token-haller-2026`
 
 ## 03_docs — Dokumentation
 

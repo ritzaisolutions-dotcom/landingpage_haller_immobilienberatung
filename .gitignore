@@ -28,5 +28,9 @@ desktop.ini
 npm-debug.log*
 .vercel
 
+# Supabase CLI temp
+**/.supabase/
+**/supabase/.temp/
+
 
 visuals
