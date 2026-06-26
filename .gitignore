@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 
+# pnpm
+.pnpm-store/
+
 # Environment
 .env
 .env.*

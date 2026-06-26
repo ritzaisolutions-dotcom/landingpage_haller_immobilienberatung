@@ -1,53 +1,31 @@
 # RAIS × Haller Immobilienberatung GmbH
 
-Monorepo für die Lead-Qualifizierung und das interne Verwaltungssystem der Haller Immobilienberatung GmbH.
+pnpm monorepo for lead qualification: LP1 termin booking, LP2 selbstauskunft, internal dashboard.
 
-## Struktur
+## Structure
 
-| Ordner | Beschreibung |
-|--------|--------------|
-| [`01_landing_page/`](01_landing_page/) | Mietinteressenten Upload-Portal (Next.js) — personalisierte Lead-Landingpage, PDF-Upload, DSGVO-Einwilligung |
-| [`02_dashboard/`](02_dashboard/) | Internes Verwaltungssystem (Dashboard V2.1) |
-| [`04_terminbuchungs_landing/`](04_terminbuchungs_landing/) | LP1 Terminbuchung — `/termin?t={lp1_token}` für Besichtigungstermine |
-| [`03_docs/`](03_docs/) | Projektdokumentation, AVVs, n8n-Workflows, Visualisierungen |
+| Path | App | Route | Vercel |
+|------|-----|-------|--------|
+| [`apps/lp1-terminbuchung/`](apps/lp1-terminbuchung/) | LP1 Terminbuchung | `/termin?t=` | immo-v-haller-terminwahl |
+| [`apps/lp2-selbstauskunft/`](apps/lp2-selbstauskunft/) | LP2 + legacy upload | `/auskunft?t=`, `/upload` | landingpage-haller-immobilienberatu |
+| [`apps/dashboard/`](apps/dashboard/) | Internal dashboard | `/` (auth) | inserats-dashboard-haller |
+| [`packages/types/`](packages/types/) | Shared DB types | — | — |
+| [`packages/supabase/`](packages/supabase/) | Shared clients + migrations | — | — |
+| [`docs/`](docs/) | Architecture, workflows | — | — |
 
-## 01_landing_page — Upload-Portal
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for Vercel setup and env vars.
 
-**Deploy:** [landingpage-haller-immobilienberatu.vercel.app](https://landingpage-haller-immobilienberatu.vercel.app)
-
-```bash
-cd 01_landing_page
-npm install   # falls node_modules fehlt
-npm run dev
-```
-
-Demo-URL: `/upload?t=demo` · Datenschutz: `/datenschutz`
-
-> Nach der Reorganisation muss in Vercel das **Root Directory** auf `01_landing_page` gesetzt werden.
-
-## 02_dashboard — Internes Verwaltungssystem
+## Quick start
 
 ```bash
-cd 02_dashboard
-npm install
-npm run dev   # http://localhost:3001
+pnpm install
+pnpm dev:lp1        # :3000
+pnpm dev:lp2        # :3002
+pnpm dev:dashboard  # :3001
+pnpm build
 ```
 
-## 04_terminbuchungs_landing — LP1 Terminbuchung
+## Demo URLs (after seeds)
 
-**Deploy:** [ImmoV_Haller_Terminwahl](https://github.com/ritzaisolutions-dotcom/ImmoV_Haller_Terminwahl.git)
-
-```bash
-cd 04_terminbuchungs_landing
-npm install
-npm run dev   # http://localhost:3000
-```
-
-Demo-URL (nach `supabase/seed_lp1_demo.sql`): `/termin?t=demo-lp1-token-haller-2026`
-
-## 03_docs — Dokumentation
-
-- `context/CONTEXT.md` — Branding, Firmendaten, Projektkontext
-- `workflows/` — n8n-Produktions- und Demo-Workflows (WF1–WF7)
-- `datenschutz/` — AVVs und Datenschutzdokumentation (Platzhalter)
-- `GOAL.md`, `DEMO_SCRIPT.md`, `SUPABASE_SETUP.md` — Spezifikationen und Setup
+- LP1: http://localhost:3000/termin?t=demo-lp1-token-haller-2026
+- LP2: http://localhost:3002/auskunft?t=demo-lp2-token-haller-2026

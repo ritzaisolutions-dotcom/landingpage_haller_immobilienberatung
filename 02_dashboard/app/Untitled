@@ -1,2 +1,0 @@
-Failed to run sql query: ERROR:  42P16: cannot change name of view column "lead_name" to "kaufbudget_eur"
-HINT:  Use ALTER VIEW ... RENAME COLUMN ... to change name of view column instead.

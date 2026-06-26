@@ -1,0 +1,11 @@
+{
+  "name": "haller-immobilien",
+  "private": true,
+  "scripts": {
+    "dev:lp1": "pnpm --filter @haller/lp1-terminbuchung dev",
+    "dev:lp2": "pnpm --filter @haller/lp2-selbstauskunft dev",
+    "dev:dashboard": "pnpm --filter @haller/dashboard dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint"
+  }
+}

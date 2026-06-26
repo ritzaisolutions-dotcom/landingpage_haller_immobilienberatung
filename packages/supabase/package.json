@@ -1,0 +1,18 @@
+{
+  "name": "@haller/supabase",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    "./admin": "./src/admin.ts",
+    "./browser": "./src/browser.ts",
+    "./server": "./src/server.ts"
+  },
+  "dependencies": {
+    "@haller/types": "workspace:*",
+    "@supabase/ssr": "^0.6.1",
+    "@supabase/supabase-js": "^2.49.1"
+  },
+  "peerDependencies": {
+    "next": "^14.2.28"
+  }
+}

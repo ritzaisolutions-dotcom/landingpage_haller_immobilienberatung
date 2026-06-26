@@ -1,0 +1,16 @@
+{
+  "name": "@haller/types",
+  "version": "0.0.0",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./lp1": "./src/lp1.ts",
+    "./demo": "./src/demo.ts"
+  },
+  "typesVersions": {
+    "*": {
+      "lp1": ["./src/lp1.ts"],
+      "demo": ["./src/demo.ts"]
+    }
+  }
+}
