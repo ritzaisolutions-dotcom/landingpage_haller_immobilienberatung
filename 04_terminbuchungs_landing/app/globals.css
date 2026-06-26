@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background-color: #f7f7f7;
+  color: #1a1a1a;
+}
+
+@layer components {
+  .lp-input {
+    @apply w-full rounded-card border border-lp-border bg-lp-bg px-3 py-2.5 text-base text-lp-text outline-none transition-colors placeholder:text-lp-muted focus:border-lp-primary focus:ring-1 focus:ring-lp-primary;
+  }
+
+  .lp-card {
+    @apply rounded-card border border-lp-border bg-lp-bg p-5;
+  }
+
+  .lp-btn-primary {
+    @apply inline-flex items-center justify-center rounded-btn bg-lp-primary px-6 py-3 text-sm font-semibold uppercase tracking-wide text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .lp-btn-slot {
+    @apply rounded-card border border-lp-border bg-lp-bg px-4 py-2 text-sm font-medium text-lp-text transition-colors hover:border-lp-primary;
+  }
+
+  .lp-btn-slot-selected {
+    @apply border-lp-primary bg-lp-primary text-white;
+  }
+}
