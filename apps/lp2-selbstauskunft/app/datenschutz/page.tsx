@@ -25,8 +25,7 @@ export default function DatenschutzPage() {
             Datenschutzerklärung
           </h1>
           <p className="mb-2 text-sm text-website-muted">
-            für das sichere Bewerbungsportal zur Einreichung von Unterlagen im
-            Rahmen einer Mietanfrage
+            für das digitale Selbstauskunft-Portal im Rahmen einer Miet- oder Kaufanfrage
           </p>
           <p className="mb-8 text-xs text-website-muted">
             Stand: {LAST_UPDATED}
@@ -67,10 +66,10 @@ export default function DatenschutzPage() {
 
           <p className="mt-8 text-center text-sm">
             <Link
-              href="/upload?t=demo"
+              href="/auskunft?t=demo-lp2-token-haller-2026"
               className="text-website-primary hover:underline"
             >
-              ← Zurück zum Bewerbungsportal
+              ← Zurück zum Selbstauskunft-Portal
             </Link>
           </p>
         </div>

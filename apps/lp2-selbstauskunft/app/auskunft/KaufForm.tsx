@@ -11,7 +11,7 @@ import {
 import { formatCurrencyEUR } from "@/lib/format";
 
 type KaufFormProps = {
-  step: 1 | 2 | 3;
+  step: 1 | 2 | 3 | 4;
   data: KaufFormData;
   errors: Partial<Record<keyof KaufFormData, string>>;
   kaufpreisEur: number | null;
@@ -213,28 +213,55 @@ export function KaufForm({ step, data, errors, kaufpreisEur, onChange }: KaufFor
     );
   }
 
-  return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-bold text-lp-text">Datenschutz & Abschluss</h2>
+  if (step === 3) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-lg font-bold text-lp-text">Zusammenfassung</h2>
 
-      <div className="lp-card space-y-2 bg-lp-bg text-sm">
-        <p>
-          <span className="font-semibold">Kaufbudget:</span>{" "}
-          {formatCurrencyEUR(Number(data.kaufbudget_eur))}
-        </p>
-        <p>
-          <span className="font-semibold">Eigenkapital:</span> {data.eigenkapital_vorhanden}
-          {data.eigenkapital_hoehe_eur
-            ? ` (${formatCurrencyEUR(Number(data.eigenkapital_hoehe_eur))})`
-            : ""}
-        </p>
-        <p>
-          <span className="font-semibold">Finanzierung:</span> {data.finanzierung_typ}
-        </p>
-        <p>
-          <span className="font-semibold">Kaufzeitraum:</span> {data.kaufzeitraum}
+        <div className="lp-card space-y-2 bg-lp-bg text-sm">
+          <p>
+            <span className="font-semibold">Kaufbudget:</span>{" "}
+            {formatCurrencyEUR(Number(data.kaufbudget_eur))}
+          </p>
+          <p>
+            <span className="font-semibold">Eigenkapital:</span> {data.eigenkapital_vorhanden}
+            {data.eigenkapital_hoehe_eur
+              ? ` (${formatCurrencyEUR(Number(data.eigenkapital_hoehe_eur))})`
+              : ""}
+          </p>
+          <p>
+            <span className="font-semibold">Finanzierung:</span> {data.finanzierung_typ}
+          </p>
+          <p>
+            <span className="font-semibold">Finanzierungsbestätigung:</span>{" "}
+            {data.finanzierungsbestaetigung}
+          </p>
+          <p>
+            <span className="font-semibold">Kaufzeitraum:</span> {data.kaufzeitraum}
+          </p>
+          <p>
+            <span className="font-semibold">Kaufgrund:</span> {data.kaufgrund}
+          </p>
+          <p>
+            <span className="font-semibold">Laufender Verkauf:</span>{" "}
+            {data.in_laufendem_verkauf === "ja" ? "Ja" : "Nein"}
+          </p>
+        </div>
+
+        <p className="text-xs text-lp-muted">
+          Bitte prüfen Sie Ihre Angaben. Im nächsten Schritt bestätigen Sie die Einwilligungen.
         </p>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-bold text-lp-text">Bestätigung</h2>
+
+      <p className="text-xs text-lp-muted">
+        Es werden keine Unterlagen hochgeladen — Ihre Angaben erfolgen auf Selbstauskunft.
+      </p>
 
       <label className="flex cursor-pointer gap-3">
         <input
@@ -244,9 +271,9 @@ export function KaufForm({ step, data, errors, kaufpreisEur, onChange }: KaufFor
           onChange={(e) => onChange({ dsgvo_accepted: e.target.checked })}
         />
         <span className="text-sm text-lp-muted">
-          Ich bestätige die Richtigkeit meiner Angaben und stimme der Verarbeitung meiner
-          personenbezogenen Daten durch die Haller Immobilienberatung GmbH zur Bearbeitung meiner
-          Kaufanfrage zu. Bei Ablehnung werden meine Daten nach 30 Tagen automatisch gelöscht.{" "}
+          Ich stimme der Verarbeitung meiner personenbezogenen Daten durch die Haller
+          Immobilienberatung GmbH zur Bearbeitung meiner Kaufanfrage zu. Bei Ablehnung werden meine
+          Daten nach 30 Tagen automatisch gelöscht.{" "}
           <a
             href="https://haller-immobilien.de/datenschutz/"
             target="_blank"
@@ -258,6 +285,22 @@ export function KaufForm({ step, data, errors, kaufpreisEur, onChange }: KaufFor
         </span>
       </label>
       {errors.dsgvo_accepted ? <p className="lp-field-error">{errors.dsgvo_accepted}</p> : null}
+
+      <label className="flex cursor-pointer gap-3">
+        <input
+          type="checkbox"
+          className="mt-1 h-5 w-5 shrink-0"
+          checked={data.angaben_wahrheitsgemaess}
+          onChange={(e) => onChange({ angaben_wahrheitsgemaess: e.target.checked })}
+        />
+        <span className="text-sm text-lp-muted">
+          Ich versichere, dass alle Angaben nach bestem Wissen und Gewissen vollständig und wahr
+          sind.
+        </span>
+      </label>
+      {errors.angaben_wahrheitsgemaess ? (
+        <p className="lp-field-error">{errors.angaben_wahrheitsgemaess}</p>
+      ) : null}
 
       <p className="text-xs text-lp-muted">
         Nach dem Absenden werden Ihre Angaben von unserem Team geprüft.

@@ -107,6 +107,8 @@ export default async function AuskunftPage({ searchParams }: AuskunftPageProps) 
     <SelbstauskunftForm
       lp2Token={token}
       leadName={typedLead.name}
+      leadEmail={typedLead.email ?? ""}
+      leadTelefon={typedLead.telefon ?? ""}
       inserat={typedInserat}
       typ={typ}
     />

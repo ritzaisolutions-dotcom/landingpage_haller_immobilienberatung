@@ -1,8 +1,10 @@
 # Haller LP2 — Selbstauskunft (`apps/lp2-selbstauskunft`)
 
-Next.js 14 — LP2 Selbstauskunft + legacy upload portal.
+Next.js 14 — Digitale Mieter- und Käufer-Selbstauskunft (ohne Schufa/Uploads).
 
 **Route:** `/auskunft?t={lp2_token}`
+
+Legacy `/upload` leitet auf `/auskunft` weiter.
 
 ## Setup
 
@@ -24,7 +26,7 @@ pnpm dev:lp2   # http://localhost:3002
 
 ## Demo
 
-After `packages/supabase/seeds/seed_lp2_demo.sql`:
+After `packages/supabase/seeds/seed_lp2_demo.sql` and migration `008_lp2_selbstauskunft_fields.sql`:
 
 - Miete: http://localhost:3002/auskunft?t=demo-lp2-token-haller-2026
 - Kauf: http://localhost:3002/auskunft?t=demo-lp2-kauf-token-2026

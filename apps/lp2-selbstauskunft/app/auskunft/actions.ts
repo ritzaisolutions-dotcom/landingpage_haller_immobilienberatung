@@ -1,12 +1,12 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
 import { notifySelbstauskunftEingereicht } from "@/lib/n8n";
 import { isLp2TokenExpired } from "@/lib/token";
 import type { InseratTyp, KaufFormData, MieteFormData } from "@/lib/types";
 import {
   deriveArbeitsverhaeltnis,
+  jaNeinToBoolean,
   mapBeschaeftigungToDb,
 } from "@/lib/types";
 
@@ -17,7 +17,9 @@ export type SubmitSelbstauskunftInput = {
   kauf?: KaufFormData;
 };
 
-export type SubmitResult = { error: string } | void;
+export type SubmitResult =
+  | { ok: true; success: { name: string } }
+  | { ok: false; error: string };
 
 const ALLOWED_STATUSES = new Set([
   "besichtigung_stattgefunden",
@@ -28,7 +30,7 @@ export async function submitSelbstauskunft(
   input: SubmitSelbstauskunftInput,
 ): Promise<SubmitResult> {
   const token = input.lp2Token?.trim();
-  if (!token) return { error: "Ungültiger Link." };
+  if (!token) return { ok: false, error: "Ungültiger Link." };
 
   const supabase = getSupabaseAdmin();
 
@@ -38,18 +40,18 @@ export async function submitSelbstauskunft(
     .eq("lp2_token", token)
     .maybeSingle();
 
-  if (leadError || !lead) return { error: "Link ungültig oder abgelaufen." };
+  if (leadError || !lead) return { ok: false, error: "Link ungültig oder abgelaufen." };
 
   if (isLp2TokenExpired(lead)) {
-    return { error: "Link abgelaufen. Bitte kontaktieren Sie uns." };
+    return { ok: false, error: "Link abgelaufen. Bitte kontaktieren Sie uns." };
   }
 
   if (lead.status === "selbstauskunft_eingereicht") {
-    return { error: "Selbstauskunft wurde bereits eingereicht." };
+    return { ok: false, error: "Selbstauskunft wurde bereits eingereicht." };
   }
 
   if (!ALLOWED_STATUSES.has(lead.status)) {
-    return { error: "Dieser Link ist derzeit nicht aktiv." };
+    return { ok: false, error: "Dieser Link ist derzeit nicht aktiv." };
   }
 
   const { data: existing } = await supabase
@@ -58,7 +60,7 @@ export async function submitSelbstauskunft(
     .eq("lead_id", lead.id)
     .maybeSingle();
 
-  if (existing) return { error: "Selbstauskunft wurde bereits eingereicht." };
+  if (existing) return { ok: false, error: "Selbstauskunft wurde bereits eingereicht." };
 
   const { data: inserat, error: inseratError } = await supabase
     .from("inserate")
@@ -67,25 +69,36 @@ export async function submitSelbstauskunft(
     .maybeSingle();
 
   if (inseratError || !inserat) {
-    return { error: "Inserat konnte nicht geladen werden." };
+    return { ok: false, error: "Inserat konnte nicht geladen werden." };
   }
 
   if (inserat.typ !== input.typ) {
-    return { error: "Formulartyp stimmt nicht mit dem Inserat überein." };
+    return { ok: false, error: "Formulartyp stimmt nicht mit dem Inserat überein." };
   }
 
   const now = new Date().toISOString();
   let insertRow: Record<string, unknown>;
+  let contactUpdate: { name: string; email: string; telefon: string } | null = null;
 
   if (input.typ === "miete") {
     const m = input.miete;
-    if (!m) return { error: "Formulardaten fehlen." };
+    if (!m) return { ok: false, error: "Formulardaten fehlen." };
+    if (!m.dsgvo_accepted || !m.angaben_wahrheitsgemaess) {
+      return { ok: false, error: "Bitte bestätigen Sie Datenschutz und Wahrheitsangaben." };
+    }
 
     const haushalt = m.haushaltsgroesse === "8+" ? 8 : Number(m.haushaltsgroesse);
+
+    contactUpdate = {
+      name: m.name.trim(),
+      email: m.email.trim(),
+      telefon: m.telefon.trim(),
+    };
 
     insertRow = {
       lead_id: lead.id,
       inserat_id: inserat.id,
+      aktuelle_adresse: m.aktuelle_adresse.trim(),
       nettoeinkommen_eur: Number(m.nettoeinkommen_eur),
       beschaeftigung_status: mapBeschaeftigungToDb(m.beschaeftigung_status),
       arbeitgeber: m.arbeitgeber || null,
@@ -95,14 +108,21 @@ export async function submitSelbstauskunft(
       haustiere: m.haustiere === "ja",
       haustiere_art: m.haustiere === "ja" ? m.haustiere_art : null,
       einzugstermin: m.einzugstermin,
+      insolvenzverfahren_laufend: jaNeinToBoolean(m.insolvenzverfahren),
+      raeumungstitel_5_jahre: jaNeinToBoolean(m.raeumungstitel_5_jahre),
       warum_diese_wohnung: m.warum_diese_wohnung.trim(),
       sonstige_angaben: m.sonstige_angaben.trim() || null,
       dsgvo_accepted: true,
       dsgvo_accepted_at: now,
+      angaben_wahrheitsgemaess: true,
+      angaben_wahrheitsgemaess_at: now,
     };
   } else {
     const k = input.kauf;
-    if (!k) return { error: "Formulardaten fehlen." };
+    if (!k) return { ok: false, error: "Formulardaten fehlen." };
+    if (!k.dsgvo_accepted || !k.angaben_wahrheitsgemaess) {
+      return { ok: false, error: "Bitte bestätigen Sie Datenschutz und Wahrheitsangaben." };
+    }
 
     insertRow = {
       lead_id: lead.id,
@@ -120,6 +140,8 @@ export async function submitSelbstauskunft(
       sonstige_angaben: k.sonstige_angaben.trim() || null,
       dsgvo_accepted: true,
       dsgvo_accepted_at: now,
+      angaben_wahrheitsgemaess: true,
+      angaben_wahrheitsgemaess_at: now,
     };
   }
 
@@ -131,18 +153,25 @@ export async function submitSelbstauskunft(
 
   if (insertError || !inserted) {
     console.error("selbstauskuenfte insert failed:", insertError);
-    return { error: "Speichern fehlgeschlagen. Bitte versuchen Sie es erneut." };
+    return { ok: false, error: "Speichern fehlgeschlagen. Bitte versuchen Sie es erneut." };
+  }
+
+  const leadPatch: Record<string, unknown> = { status: "selbstauskunft_eingereicht" };
+  if (contactUpdate) {
+    leadPatch.name = contactUpdate.name;
+    leadPatch.email = contactUpdate.email;
+    leadPatch.telefon = contactUpdate.telefon;
   }
 
   const { error: updateError } = await supabase
     .from("leads")
-    .update({ status: "selbstauskunft_eingereicht" })
+    .update(leadPatch)
     .eq("id", lead.id);
 
   if (updateError) {
     console.error("lead update failed:", updateError);
     await supabase.from("selbstauskuenfte").delete().eq("id", inserted.id);
-    return { error: "Aktualisierung fehlgeschlagen. Bitte versuchen Sie es erneut." };
+    return { ok: false, error: "Aktualisierung fehlgeschlagen. Bitte versuchen Sie es erneut." };
   }
 
   const webhook = await notifySelbstauskunftEingereicht({
@@ -158,5 +187,6 @@ export async function submitSelbstauskunft(
     console.error("n8n selbstauskunft-eingereicht webhook failed", webhook.status);
   }
 
-  redirect(`/auskunft/success?name=${encodeURIComponent(lead.name)}`);
+  const displayName = contactUpdate?.name ?? lead.name;
+  return { ok: true, success: { name: displayName } };
 }

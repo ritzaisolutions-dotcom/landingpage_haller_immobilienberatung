@@ -1,29 +1,25 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  CheckCircle2,
-  FileCheck,
-  Lock,
-  Shield,
-  Smartphone,
-} from "lucide-react";
+import { CheckCircle2, ClipboardList, Lock, Shield, Smartphone } from "lucide-react";
 import { PortalHeader } from "@/components/PortalHeader";
+
+const DEMO_LP2_TOKEN = "demo-lp2-token-haller-2026";
 
 const benefits = [
   {
     icon: Lock,
     title: "Sicher & DSGVO-konform",
-    text: "Unterlagen werden verschlüsselt übertragen und nach 90 Tagen automatisch gelöscht.",
+    text: "Selbstauskunft-Daten werden verschlüsselt übertragen und nach Abschluss des Verfahrens automatisch gelöscht.",
   },
   {
     icon: Smartphone,
     title: "Mobil optimiert",
-    text: "Mieter können Schufa und Gehaltsnachweise direkt vom Smartphone hochladen.",
+    text: "Mieter füllen die digitale Selbstauskunft direkt am Smartphone aus — ohne Unterlagen-Upload.",
   },
   {
-    icon: FileCheck,
-    title: "Weniger Rückfragen",
-    text: "Pflichtfelder und PDF-Validierung sorgen für vollständige Bewerbungen.",
+    icon: ClipboardList,
+    title: "Strukturierte Angaben",
+    text: "Alle relevanten Felder einer Mieter-Selbstauskunft in klaren Schritten — auf Selbstauskunft.",
   },
   {
     icon: Shield,
@@ -33,10 +29,10 @@ const benefits = [
 ];
 
 const steps = [
-  "Interessent erhält Link aus ImmoScout24",
-  "Name ist bereits hinterlegt — nur Kontakt & PDFs ergänzen",
-  "Ein Klick: Unterlagen sicher einreichen",
-  "Ihr Team prüft und antwortet über ImmoScout24",
+  "Interessent erhält Link nach der Besichtigung",
+  "Digitale Mieter-Selbstauskunft in wenigen Schritten ausfüllen",
+  "Datenschutz und Wahrheitsbestätigung per Checkbox",
+  "Ihr Team prüft die Angaben und entscheidet",
 ];
 
 export function MarketingLanding() {
@@ -57,16 +53,16 @@ export function MarketingLanding() {
               Hausverwaltung Haller · Andernach
             </p>
             <h1 className="mb-4 text-3xl font-bold leading-tight text-website-dark sm:text-4xl">
-              Bewerbungsportal für vorgeprüfte Mietinteressenten
+              Digitale Mieter-Selbstauskunft
             </h1>
             <p className="mb-8 max-w-xl text-base leading-relaxed text-website-muted">
-              Statt E-Mail-Anhängen und unvollständigen Unterlagen: ein sicheres
-              Portal, in dem Mieter Schufa und Entgeltnachweise strukturiert
-              einreichen — personalisiert per Link, ohne Login.
+              Statt E-Mail-Anhängen und unvollständigen Unterlagen: eine strukturierte
+              Selbstauskunft, die der Interessent online ausfüllt — personalisiert per Link,
+              ohne Schufa-Upload und ohne Gehaltsnachweise.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
-                href="/upload?t=demo"
+                href={`/auskunft?t=${DEMO_LP2_TOKEN}`}
                 className="inline-flex items-center justify-center rounded-haller bg-website-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0099b5]"
               >
                 Interaktive Demo öffnen
@@ -92,22 +88,22 @@ export function MarketingLanding() {
             </div>
             <div className="p-6">
               <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-website-muted">
-                So sieht der Mieter das Portal
+                So sieht der Mieter das Formular
               </p>
               <div className="space-y-3 rounded-haller border border-website-border bg-website-bg p-4">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-website-muted">Name</span>
-                  <span className="font-medium text-website-dark">Anna Müller</span>
+                  <span className="text-website-muted">Schritt 1</span>
+                  <span className="font-medium text-website-dark">Persönliche Angaben</span>
                 </div>
-                <div className="rounded-haller border border-dashed border-website-border p-4 text-center">
-                  <p className="text-sm text-website-text">Schufa-Auskunft (PDF)</p>
-                  <p className="mt-1 text-xs text-website-muted">hochladen oder ablegen</p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-website-muted">Schritt 2</span>
+                  <span className="font-medium text-website-dark">Beruf & Einkommen</span>
                 </div>
                 <div className="rounded-haller border border-website-border bg-white px-3 py-2 text-xs text-website-muted">
-                  DSGVO-Einwilligung · 90-Tage-Löschung
+                  Datenschutz · Wahrheitsbestätigung
                 </div>
                 <div className="rounded-haller bg-website-primary py-2.5 text-center text-sm font-semibold text-white">
-                  Unterlagen sicher einreichen
+                  Selbstauskunft einreichen
                 </div>
               </div>
             </div>
@@ -131,18 +127,14 @@ export function MarketingLanding() {
           id="ablauf"
           className="mb-16 rounded border border-website-border bg-white p-6 shadow-sm sm:p-8"
         >
-          <h2 className="mb-6 text-xl font-bold text-website-dark">
-            Ablauf in 4 Schritten
-          </h2>
+          <h2 className="mb-6 text-xl font-bold text-website-dark">Ablauf in 4 Schritten</h2>
           <ol className="grid gap-4 sm:grid-cols-2">
             {steps.map((step, index) => (
               <li key={step} className="flex gap-3">
                 <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-website-primary/15 text-xs font-bold text-website-primary">
                   {index + 1}
                 </span>
-                <span className="pt-0.5 text-sm leading-relaxed text-website-muted">
-                  {step}
-                </span>
+                <span className="pt-0.5 text-sm leading-relaxed text-website-muted">{step}</span>
               </li>
             ))}
           </ol>
@@ -150,15 +142,12 @@ export function MarketingLanding() {
 
         <section className="rounded border border-website-primary/30 bg-white p-6 text-center shadow-sm sm:p-8">
           <CheckCircle2 className="mx-auto mb-3 h-8 w-8 text-website-primary" />
-          <h2 className="mb-2 text-lg font-bold text-website-dark">
-            Bereit für die Live-Demo?
-          </h2>
+          <h2 className="mb-2 text-lg font-bold text-website-dark">Bereit für die Live-Demo?</h2>
           <p className="mx-auto mb-6 max-w-lg text-sm text-website-muted">
-            Testen Sie den kompletten Upload-Flow mit Beispieldaten — ohne Datenbank,
-            ohne Vertrag, ohne Risiko.
+            Testen Sie die digitale Mieter-Selbstauskunft mit Beispieldaten.
           </p>
           <Link
-            href="/upload?t=demo"
+            href={`/auskunft?t=${DEMO_LP2_TOKEN}`}
             className="inline-flex items-center justify-center rounded-haller bg-website-primary px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0099b5]"
           >
             Jetzt Demo starten

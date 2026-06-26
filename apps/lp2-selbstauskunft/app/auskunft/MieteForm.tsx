@@ -10,7 +10,7 @@ import {
 import { formatCurrencyEUR, formatDateDE, minEinzugISO, monthYearOptions } from "@/lib/format";
 
 type MieteFormProps = {
-  step: 1 | 2 | 3;
+  step: 1 | 2 | 3 | 4;
   data: MieteFormData;
   errors: Partial<Record<keyof MieteFormData, string>>;
   kaltmieteEur: number;
@@ -26,6 +26,40 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
   );
 }
 
+function JaNeinField({
+  name,
+  label,
+  value,
+  error,
+  onChange,
+}: {
+  name: string;
+  label: string;
+  value: "ja" | "nein" | "";
+  error?: string;
+  onChange: (v: "ja" | "nein") => void;
+}) {
+  return (
+    <div>
+      <FieldLabel required>{label}</FieldLabel>
+      <div className="flex gap-4">
+        {(["ja", "nein"] as const).map((v) => (
+          <label key={v} className="flex min-h-[48px] cursor-pointer items-center gap-2">
+            <input
+              type="radio"
+              name={name}
+              checked={value === v}
+              onChange={() => onChange(v)}
+            />
+            <span className="text-sm capitalize">{v}</span>
+          </label>
+        ))}
+      </div>
+      {error ? <p className="lp-field-error">{error}</p> : null}
+    </div>
+  );
+}
+
 export function MieteForm({ step, data, errors, kaltmieteEur, onChange }: MieteFormProps) {
   const minNetto = kaltmieteEur * 3;
   const monthOptions = monthYearOptions();
@@ -33,7 +67,64 @@ export function MieteForm({ step, data, errors, kaltmieteEur, onChange }: MieteF
   if (step === 1) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-lp-text">Berufliche Situation</h2>
+        <h2 className="text-lg font-bold text-lp-text">Persönliche Angaben</h2>
+
+        <div>
+          <FieldLabel required>Vollständiger Name</FieldLabel>
+          <input
+            className="lp-input"
+            type="text"
+            value={data.name}
+            onChange={(e) => onChange({ name: e.target.value })}
+          />
+          {errors.name ? <p className="lp-field-error">{errors.name}</p> : null}
+        </div>
+
+        <div>
+          <FieldLabel required>E-Mail</FieldLabel>
+          <input
+            className="lp-input"
+            type="email"
+            inputMode="email"
+            value={data.email}
+            onChange={(e) => onChange({ email: e.target.value })}
+          />
+          {errors.email ? <p className="lp-field-error">{errors.email}</p> : null}
+        </div>
+
+        <div>
+          <FieldLabel required>Telefon</FieldLabel>
+          <input
+            className="lp-input"
+            type="tel"
+            inputMode="tel"
+            value={data.telefon}
+            onChange={(e) => onChange({ telefon: e.target.value })}
+          />
+          {errors.telefon ? <p className="lp-field-error">{errors.telefon}</p> : null}
+        </div>
+
+        <div>
+          <FieldLabel required>Aktuelle Anschrift</FieldLabel>
+          <input
+            className="lp-input"
+            type="text"
+            placeholder="Straße, PLZ Ort"
+            value={data.aktuelle_adresse}
+            onChange={(e) => onChange({ aktuelle_adresse: e.target.value })}
+          />
+          {errors.aktuelle_adresse ? (
+            <p className="lp-field-error">{errors.aktuelle_adresse}</p>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 2) {
+    return (
+      <div className="space-y-4">
+        <h2 className="text-lg font-bold text-lp-text">Beruf & Einkommen</h2>
 
         <div>
           <FieldLabel required>Beschäftigungsstatus</FieldLabel>
@@ -111,10 +202,10 @@ export function MieteForm({ step, data, errors, kaltmieteEur, onChange }: MieteF
     );
   }
 
-  if (step === 2) {
+  if (step === 3) {
     return (
       <div className="space-y-4">
-        <h2 className="text-lg font-bold text-lp-text">Haushalt & Wünsche</h2>
+        <h2 className="text-lg font-bold text-lp-text">Haushalt & Bonität</h2>
 
         <div>
           <FieldLabel required>Anzahl Personen im Haushalt inkl. Ihrer Person</FieldLabel>
@@ -135,23 +226,15 @@ export function MieteForm({ step, data, errors, kaltmieteEur, onChange }: MieteF
           ) : null}
         </div>
 
-        <div>
-          <FieldLabel required>Haustiere vorhanden</FieldLabel>
-          <div className="flex gap-4">
-            {(["ja", "nein"] as const).map((v) => (
-              <label key={v} className="flex min-h-[48px] cursor-pointer items-center gap-2">
-                <input
-                  type="radio"
-                  name="haustiere"
-                  checked={data.haustiere === v}
-                  onChange={() => onChange({ haustiere: v, haustiere_art: v === "nein" ? "" : data.haustiere_art })}
-                />
-                <span className="text-sm capitalize">{v}</span>
-              </label>
-            ))}
-          </div>
-          {errors.haustiere ? <p className="lp-field-error">{errors.haustiere}</p> : null}
-        </div>
+        <JaNeinField
+          name="haustiere"
+          label="Haustiere vorhanden"
+          value={data.haustiere}
+          error={errors.haustiere}
+          onChange={(v) =>
+            onChange({ haustiere: v, haustiere_art: v === "nein" ? "" : data.haustiere_art })
+          }
+        />
 
         <div
           className={`lp-conditional ${data.haustiere === "ja" ? "max-h-40 opacity-100" : "max-h-0 opacity-0"}`}
@@ -179,6 +262,22 @@ export function MieteForm({ step, data, errors, kaltmieteEur, onChange }: MieteF
             <p className="lp-field-error">{errors.einzugstermin}</p>
           ) : null}
         </div>
+
+        <JaNeinField
+          name="insolvenzverfahren"
+          label="Laufendes Insolvenzverfahren"
+          value={data.insolvenzverfahren}
+          error={errors.insolvenzverfahren}
+          onChange={(v) => onChange({ insolvenzverfahren: v })}
+        />
+
+        <JaNeinField
+          name="raeumungstitel"
+          label="Räumungstitel in den letzten 5 Jahren"
+          value={data.raeumungstitel_5_jahre}
+          error={errors.raeumungstitel_5_jahre}
+          onChange={(v) => onChange({ raeumungstitel_5_jahre: v })}
+        />
 
         <div>
           <FieldLabel required>Warum möchten Sie in diese Wohnung?</FieldLabel>
@@ -211,9 +310,15 @@ export function MieteForm({ step, data, errors, kaltmieteEur, onChange }: MieteF
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-bold text-lp-text">Datenschutz & Abschluss</h2>
+      <h2 className="text-lg font-bold text-lp-text">Bestätigung</h2>
 
       <div className="lp-card space-y-2 bg-lp-bg text-sm">
+        <p>
+          <span className="font-semibold">Name:</span> {data.name}
+        </p>
+        <p>
+          <span className="font-semibold">Anschrift:</span> {data.aktuelle_adresse}
+        </p>
         <p>
           <span className="font-semibold">Beschäftigung:</span> {data.beschaeftigung_status}
           {data.arbeitgeber ? ` bei ${data.arbeitgeber}` : ""}
@@ -230,7 +335,19 @@ export function MieteForm({ step, data, errors, kaltmieteEur, onChange }: MieteF
           <span className="font-semibold">Einzugstermin:</span>{" "}
           {data.einzugstermin ? formatDateDE(data.einzugstermin) : "—"}
         </p>
+        <p>
+          <span className="font-semibold">Insolvenzverfahren:</span>{" "}
+          {data.insolvenzverfahren === "ja" ? "Ja" : "Nein"}
+        </p>
+        <p>
+          <span className="font-semibold">Räumungstitel (5 Jahre):</span>{" "}
+          {data.raeumungstitel_5_jahre === "ja" ? "Ja" : "Nein"}
+        </p>
       </div>
+
+      <p className="text-xs text-lp-muted">
+        Es werden keine Unterlagen hochgeladen — Ihre Angaben erfolgen auf Selbstauskunft.
+      </p>
 
       <label className="flex cursor-pointer gap-3">
         <input
@@ -240,9 +357,9 @@ export function MieteForm({ step, data, errors, kaltmieteEur, onChange }: MieteF
           onChange={(e) => onChange({ dsgvo_accepted: e.target.checked })}
         />
         <span className="text-sm text-lp-muted">
-          Ich bestätige die Richtigkeit meiner Angaben und stimme der Verarbeitung meiner
-          personenbezogenen Daten durch die Haller Immobilienberatung GmbH zur Bearbeitung meiner
-          Mietbewerbung zu. Bei Ablehnung werden meine Daten nach 30 Tagen automatisch gelöscht.{" "}
+          Ich stimme der Verarbeitung meiner personenbezogenen Daten durch die Haller
+          Immobilienberatung GmbH zur Bearbeitung meiner Mietbewerbung zu. Bei Ablehnung werden
+          meine Daten nach 30 Tagen automatisch gelöscht.{" "}
           <a
             href="https://haller-immobilien.de/datenschutz/"
             target="_blank"
@@ -254,6 +371,22 @@ export function MieteForm({ step, data, errors, kaltmieteEur, onChange }: MieteF
         </span>
       </label>
       {errors.dsgvo_accepted ? <p className="lp-field-error">{errors.dsgvo_accepted}</p> : null}
+
+      <label className="flex cursor-pointer gap-3">
+        <input
+          type="checkbox"
+          className="mt-1 h-5 w-5 shrink-0"
+          checked={data.angaben_wahrheitsgemaess}
+          onChange={(e) => onChange({ angaben_wahrheitsgemaess: e.target.checked })}
+        />
+        <span className="text-sm text-lp-muted">
+          Ich versichere, dass alle Angaben nach bestem Wissen und Gewissen vollständig und wahr
+          sind.
+        </span>
+      </label>
+      {errors.angaben_wahrheitsgemaess ? (
+        <p className="lp-field-error">{errors.angaben_wahrheitsgemaess}</p>
+      ) : null}
 
       <p className="text-xs text-lp-muted">
         Nach dem Absenden werden Ihre Angaben von unserem Team geprüft.

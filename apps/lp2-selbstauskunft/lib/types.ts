@@ -2,7 +2,13 @@ import type { Inserat, InseratTyp, Lead } from "@haller/types";
 
 export type { Inserat, InseratTyp, Lead };
 
+export type JaNein = "ja" | "nein" | "";
+
 export type MieteFormData = {
+  name: string;
+  email: string;
+  telefon: string;
+  aktuelle_adresse: string;
   beschaeftigung_status: string;
   arbeitgeber: string;
   angestellt_seit: string;
@@ -11,9 +17,12 @@ export type MieteFormData = {
   haustiere: "ja" | "nein" | "";
   haustiere_art: string;
   einzugstermin: string;
+  insolvenzverfahren: "ja" | "nein" | "";
+  raeumungstitel_5_jahre: "ja" | "nein" | "";
   warum_diese_wohnung: string;
   sonstige_angaben: string;
   dsgvo_accepted: boolean;
+  angaben_wahrheitsgemaess: boolean;
 };
 
 export type KaufFormData = {
@@ -27,6 +36,7 @@ export type KaufFormData = {
   in_laufendem_verkauf: "ja" | "nein" | "";
   sonstige_angaben: string;
   dsgvo_accepted: boolean;
+  angaben_wahrheitsgemaess: boolean;
 };
 
 export const BESCHAEFTIGUNG_OPTIONS = [
@@ -96,14 +106,8 @@ export function mapBeschaeftigungToDb(status: string): string {
   return "arbeitssuchend";
 }
 
-export const TOKEN_MAX_AGE_MS = 72 * 60 * 60 * 1000;
-
-export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
-
-export function isTokenExpired(createdAt: string): boolean {
-  const created = new Date(createdAt).getTime();
-  if (Number.isNaN(created)) return true;
-  return Date.now() - created > TOKEN_MAX_AGE_MS;
+export function jaNeinToBoolean(value: JaNein): boolean {
+  return value === "ja";
 }
 
 export function getFirstName(fullName: string): string {
