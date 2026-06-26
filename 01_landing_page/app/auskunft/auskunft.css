@@ -1,0 +1,27 @@
+@tailwind components;
+
+@layer components {
+  .lp-input {
+    @apply min-h-[48px] w-full rounded-card border border-lp-border bg-lp-bg px-3 py-2.5 text-base text-lp-text outline-none transition-colors placeholder:text-lp-muted focus:border-lp-primary focus:ring-1 focus:ring-lp-primary;
+  }
+
+  .lp-card {
+    @apply rounded-card border border-lp-border bg-lp-surface p-5;
+  }
+
+  .lp-btn-primary {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-btn bg-lp-primary px-6 py-3 text-sm font-semibold uppercase tracking-wide text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .lp-btn-secondary {
+    @apply inline-flex min-h-[48px] items-center justify-center rounded-btn border border-lp-border bg-lp-bg px-6 py-3 text-sm font-semibold text-lp-text transition-colors hover:border-lp-primary;
+  }
+
+  .lp-field-error {
+    @apply mt-1 text-xs text-red-600;
+  }
+
+  .lp-conditional {
+    @apply overflow-hidden transition-all duration-300 ease-in-out;
+  }
+}

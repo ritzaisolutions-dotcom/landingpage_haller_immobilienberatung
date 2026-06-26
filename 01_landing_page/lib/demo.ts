@@ -10,6 +10,8 @@ export const DEMO_LEAD: Lead = {
   email: null,
   telefon: null,
   status: "neu",
+  lp2_token: null,
+  selbstauskunft_angefordert_at: null,
   created_at: new Date().toISOString(),
   dsgvo_accepted: false,
   dsgvo_accepted_at: null,

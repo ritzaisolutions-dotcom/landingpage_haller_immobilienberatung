@@ -8,6 +8,15 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        lp: {
+          primary: "#00AFCB",
+          bg: "#FFFFFF",
+          surface: "#F7F7F7",
+          text: "#1A1A1A",
+          muted: "#6B7280",
+          border: "#E5E7EB",
+          success: "#059669",
+        },
         haller: {
           bg: "#07101E",
           card: "#0D1F3C",
@@ -31,6 +40,8 @@ const config: Config = {
       },
       borderRadius: {
         haller: "3px",
+        card: "8px",
+        btn: "6px",
       },
     },
   },
